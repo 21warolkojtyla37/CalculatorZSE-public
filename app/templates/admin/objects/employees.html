@@ -1,0 +1,44 @@
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Osoby{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Osoby</h1>
+        {% if did %}
+          <hr class="intro-divider">
+          <div class="opt">
+              <a href="{{ url_for('home.docs') }}">
+                  <i class="fa fa-book"></i> Zobacz dokumentację
+              </a>
+              <a href="{{ url_for('home.dashboard') }}">
+                  <i class="fa fa-table"></i> Wygeneruj arkusz
+              </a>
+              <a href="{{ url_for('home.bug') }}">
+                  <i class="fa fa-bug "></i> Zgłoś błąd
+              </a>
+          </div>
+          <div class="center">
+                <div class="widget_row">
+                    {% for d in did %}
+                       {% if not loop.index is divisibleby(2) %}
+                    <div><a href="{{ url_for('admin.list_employees_by_depart', id=d) }}">
+    
+                    {% else %}
+                        <i class="fa fa-folder-open"></i>{{d}}</a></div>
+
+                    {% endif %}
+                    {% endfor %}
+                </div>
+              </div>
+          </div>
+        {% endif %}
+        </div>
+      </div>
+    </div>
+{% endblock %}

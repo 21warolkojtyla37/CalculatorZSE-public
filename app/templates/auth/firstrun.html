@@ -1,0 +1,39 @@
+{% import "bootstrap/utils.html" as utils %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{title}} | Kalkulator ZSE</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/firstrun.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+ integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+			  crossorigin="anonymous"></script>
+    <div id="wrapper">
+            <div id="left"></div>
+        <div class="right">
+              <h1>Dzień dobry! <span class="wave">👋🏻</span></h1>
+            <br/>
+              <div id="first">
+                  <h2>Witaj w Kalkulatorze ZSE!</h2>
+                    <p>Przed Tobą pierwsze uruchomienie aplikacji. Aby móc korzystać z niej, musisz podać swoje dane.</p>
+                    <p>Jeśli nie chcesz podawać swoich danych, możesz podać nieprawdziwe imię i nazwisko ale email powinien być takim do którego masz dostęp.</p>
+                    <p>Jeśli chcesz podać swoje dane, kliknij przycisk poniżej.</p>
+                    <br/>
+                  <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
+              </div>
+              <div id="form" hidden>{{ wtf.quick_form(form) }}</div>
+        </div>
+      <div class="push"></div>
+    </div>
+    <div id="load"></div>
+    <script src="{{ url_for('static', filename='js/lbar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rnd.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Zgłoszenia{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Zgłoszenia</h1>
+        <h3 style="text-align:center;">Tutaj użytkownicy mogą zgłaszać błędy</h3>
+        {% if infos %}
+          <hr class="intro-divider">
+        <div class="opt">
+          <a href="{{ url_for('home.docs') }}">
+            <i class="fa fa-book"></i> Zobacz dokumentację
+          </a>
+          <a href="{{ url_for('home.dashboard') }}">
+            <i class="fa fa-table"></i> Wygeneruj arkusz
+          </a>
+          <a href="{{ url_for('home.bug') }}">
+            <i class="fa fa-bug "></i> Zgłoś błąd
+          </a>
+        </div>
+          <div class="center">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15%"> Typ </th>
+                  <th width="40%"> Opis </th>
+                  <th width="15%"> Data </th>
+                  <th width="25%"> Akcje </th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for error in infos %}
+                <tr>
+                  <td> {{ error.type }} </td>
+                  <td> {{ error.description }} </td>
+                  <td>
+                    {% if error.time %}
+                      {{ error.time }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('home.dashboard', id=error.id) }}">
+                      <i class="fa fa-trash"></i> Usuń
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+        {% else %}
+          <div class="center">
+            <h3> Nie ma zgłoszeń </h3>
+            <hr class="intro-divider">
+        {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

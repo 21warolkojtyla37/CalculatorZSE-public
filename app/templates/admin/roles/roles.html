@@ -1,0 +1,81 @@
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Kategorie{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Kategorie</h1>
+        <h3 style="text-align:center;">Możesz je potem przypisywać w narzędziu<a href="{{ url_for('admin.list_points') }}"> Punkty</a>.</h3>
+        {% if roles %}
+          <hr class="intro-divider">
+        <div class="opt">
+          <a href="{{ url_for('home.docs') }}">
+            <i class="fa fa-book"></i> Zobacz dokumentację
+          </a>
+          <a href="{{ url_for('home.dashboard') }}">
+            <i class="fa fa-table"></i> Wygeneruj arkusz
+          </a>
+          <a href="{{ url_for('home.bug') }}">
+            <i class="fa fa-bug "></i> Zgłoś błąd
+          </a>
+        </div>
+          <div class="center">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15%"> Nazwa </th>
+                  <th width="30%"> Opis </th>
+                  <th width="10%"> Wartość </th>
+                  <th width="10%"> Ilość osób które posiadają</th>
+                  <th width="15%"> Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for role in roles %}
+                <tr>
+                  <td> {{ role.name }} </td>
+                  <td> {{ role.description }} </td>
+                  <td>
+                      {{ role.value }}  
+                  </td>
+                  <td>
+                    {% if role.employees %}
+                      {{ role.employees.count() }}
+                    {% else %}
+                        x
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.edit_role', id=role.id) }}">
+                      <i class="fa fa-pencil"></i> Edytuj
+                    </a><br>
+                    <a href="{{ url_for('admin.delete_role', id=role.id) }}">
+                      <i class="fa fa-trash"></i> Usuń
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div style="text-align: center">
+        {% else %}
+          <div style="text-align: center">
+            <h3> Nie zostały dodane jeszcze żadne kategorie. </h3>
+            <hr class="intro-divider">
+        {% endif %}
+          <a href="{{ url_for('admin.add_role') }}" class="btn btn-default btn-lg">
+            <i class="fa fa-plus"></i>
+            Dodaj kategorię
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

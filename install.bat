@@ -1,0 +1,1 @@
+ C:\"Program Files"\Python310\python.exe -m pip install flask flask-sqlalchemy flask-login flask-bootstrap matplotlib flask-migrate mysqlclient flask-wtf wtforms-sqlalchemy email-validator xlsxwriter

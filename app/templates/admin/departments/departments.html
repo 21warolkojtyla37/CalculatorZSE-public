@@ -1,0 +1,79 @@
+
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Oddziały{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Oddziały</h1>
+        <h3 style="text-align:center;">Tutaj możesz grupować użytkowników na np. uczniów i nauczycieli.</h3>
+        {% if departments %}
+          <hr class="intro-divider">
+        <div class="opt">
+          <a href="{{ url_for('home.docs') }}">
+            <i class="fa fa-book"></i> Zobacz dokumentację
+          </a>
+          <a href="{{ url_for('home.dashboard') }}">
+            <i class="fa fa-table"></i> Wygeneruj arkusz
+          </a>
+          <a href="{{ url_for('home.bug') }}">
+            <i class="fa fa-bug "></i> Zgłoś błąd
+          </a>
+        </div>
+          <div class="center">
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15%"> Nazwa </th>
+                  <th width="40%"> Opis </th>
+                  <th width="15%"> Ilość użytkowników </th>
+                  <th width="25%"> Akcje </th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for department in departments %}
+                <tr>
+                  <td> {{ department.name }} </td>
+                  <td> {{ department.description }} </td>
+                  <td>
+                    {% if department.employees %}
+                      {{ department.employees.count() }}
+                    {% else %}
+                      0
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.edit_department', id=department.id) }}">
+                      <i class="fa fa-pencil"></i> Edytuj
+                    </a><br>
+                    <a href="{{ url_for('admin.delete_department', id=department.id) }}">
+                      <i class="fa fa-trash"></i> Usuń
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+            <div style="text-align: center">
+
+        {% else %}
+          <div style="text-align: center">
+            <h3> Nie utworzono jeszcze żadnych oddziałów. </h3>
+            <hr class="intro-divider">
+        {% endif %}
+          <a href="{{ url_for('admin.add_department') }}" class="bot btn btn-default btn-lg">
+            <i class="fa fa-plus"></i>
+            Dodaj nowy
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

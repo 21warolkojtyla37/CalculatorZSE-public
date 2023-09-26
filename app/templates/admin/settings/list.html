@@ -1,0 +1,43 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Ustawienia{% endblock %}
+{% block body %}
+    <div class="content-section">
+        <div class="outer">
+            <div class="middle">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <div class="inner">
+                    <br/>
+                    <br/>
+                    <h1 style="text-align:center;">Ustawienia</h1>
+                    <h3 style="text-align:center;">Tutaj zmienisz to i owo.</h3>
+                    <hr class="intro-divider">
+                    <div class="opt">
+                        <a href="{{ url_for('home.docs') }}">
+                            <i class="fa fa-book"></i> Zobacz dokumentację
+                        </a>
+                        <a href="{{ url_for('home.bug') }}">
+                            <i class="fa fa-bug "></i> Zgłoś błąd
+                        </a>
+                    </div>
+                    <div class="center">
+                        <div class="btn-group">
+                            <button onclick="manager(1)">Wygląd</button>
+                            <button onclick="manager(2)">Aktualizacje</button>
+                            <button>Baza danych</button>
+                            <button>Inne</button>
+                        </div>
+                        {{ wtf.quick_form(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

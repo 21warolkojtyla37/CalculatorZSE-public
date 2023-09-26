@@ -1,0 +1,23 @@
+{% import "bootstrap/utils.html" as utils %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Logowanie{% endblock %}
+{% block body %}
+<div class="content-section">
+  <br/>
+  {{ utils.flashed_messages() }}
+    <p class="title">Kalkulator ZSE</p>
+  <br/>
+  <div class="center">
+    <h1>Zaloguj się na swoje konto</h1>
+    <br/>
+    {{ wtf.quick_form(form) }}
+  </div>
+    {% if canregister %}
+        <br>
+    <div class="center">
+      <p>Nie masz konta?  <a href="{{ url_for('auth.register') }}">Zarejestruj się </a></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+@font-face {
+    font-family: 'Karla';
+    src: url('../fonts/karla.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+* {
+    font-family: Karla;
+    text-align: center;
+    transition: 0.2s;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    margin: 0 !important;
+}
+
+h1 {
+    padding-top: 4vh;
+    margin-top: 0;
+}
+
+button {
+    background-color: white;
+    color: black;
+    padding: 10px 24px;
+    margin: auto;
+    cursor: pointer;
+    border-color: #1D4AA3;
+    border-radius: 10px;
+}
+
+button:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+button:hover {
+  background-color: lightblue;
+}
+
+#left {
+    float: left;
+    background-image: url(../img/w1.jpg);
+    background-size: cover;
+    background-position: center;
+    width: 40%;
+    height: 100vh;
+}
+
+#right {
+    vertical-align: top;
+    float: left;
+    width: 40%;
+}
+
+.form-control {
+    margin-left: 50% !important;
+    width: 40%;
+    border: 0px;
+    border-bottom: 4px gray solid;
+}
+
+.form-control:focus {
+    transition: 0.1s;
+    border-bottom: 6px #1D4AA3 solid;
+}
+
+.wave {
+    animation-name: wave-animation; /* Refers to the name of your @keyframes element below */
+    animation-duration: 2.5s; /* Change to speed up or slow down */
+    animation-iteration-count: infinite; /* Never stop waving :) */
+    transform-origin: 70% 70%; /* Pivot around the bottom-left palm */
+    display: inline-block;
+}
+
+@keyframes wave-animation {
+    0% {
+        transform: rotate(0.0deg)
+    }
+    10% {
+        transform: rotate(14.0deg)
+    }
+    /* The following five values can be played with to make the waving more or less extreme */
+    20% {
+        transform: rotate(-8.0deg)
+    }
+    30% {
+        transform: rotate(14.0deg)
+    }
+    40% {
+        transform: rotate(-4.0deg)
+    }
+    50% {
+        transform: rotate(10.0deg)
+    }
+    60% {
+        transform: rotate(0.0deg)
+    }
+    /* Reset for the last half to pause */
+    100% {
+        transform: rotate(0.0deg)
+    }
+}

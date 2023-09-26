@@ -1,0 +1,30 @@
+
+{% import "bootstrap/utils.html" as utils %}
+{% extends "base.html" %}
+{% block title %}Arkusze{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="outer">
+    <div class="middle">
+      <div class="inner">
+        <br/>
+        {{ utils.flashed_messages() }}
+        <br/>
+        <h1 style="text-align:center;">Arkusze</h1>
+        <hr class="intro-divider">
+        <h3 style="text-align:center;">Tu można zarządzać arkuszami (funkcja w fazie testów)</h3>
+        <div class="opt">
+          <a href="{{ url_for('home.docs') }}">
+            <i class="fa fa-book"></i> Zobacz dokumentację
+          </a>
+          <a href="{{ url_for('magic.history') }}">
+            <i class="fa fa-history"></i> Wyświetl historię arkuszy
+          </a>
+        </div>
+
+        </div>
+        <p style="text-align:center;">Nie masz żadnych arkuszy do wygenerowania.</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,10 @@
+flask
+flask_bootstrap
+flask_login
+flask_migrate
+flask_sqlalchemy
+flask-wtf
+wtforms_sqlalchemy
+email_validator
+xlsxwriter
+mysqlclient

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Kalkulator ZSE</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/zse2.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+</head>
+<body onload="v2_noAdmin();">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous"></script>
+
+<div class="top">
+    <div id="appname" class="top-left">Kalkulator ZSE
+        <div id="topcontextleft">
+            <li><a href="{{ url_for('admin.list_settings') }}">O aplikacji</a></li>
+        </div>
+    </div>
+
+    <div id="userinfo" class="top-right">
+        <li><img class="prof img-fluid" src="{{ url_for('static', filename=('user_content/profile_photo/' + current_user.profile_photo)) }}"></li>
+        <div id="topcontextright">
+            <li><a><i class="fa-solid fa-user"></i> {{ current_user.first_name }} {{ current_user.first_name }}</a></li>
+            <li><a href="{{ url_for('admin.list_settings') }}">Ustawienia</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">Wyloguj się</a></li>
+        </div>
+    </div>
+</div>
+
+<div class="wrapper" id="wrapper">
+    <div class="body">
+    </div>
+    <div class="push"></div>
+    <div id="load"></div>
+    <footer><img class="logo" src="{{ url_for('static', filename='img/logo.png') }}">
+        <h3>Kalkulator ZSE</h3>
+        <hr>
+        <p><i class="fa-duotone fa-code-compare"></i> Wersja 2.0<span style="color: red;"> testowa</span></p>
+        <p class="copyright"><i class="fa-duotone fa-computer-classic"></i> Mikołaj Patynowski 3I2</p></footer>
+</div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/v2.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Edytor administratora{% endblock %}
+{% block body %}
+<div class="content-section">
+    <div class="outer">
+        <div class="middle">
+            <div class="inner">
+                <div class="center">
+                    <h1> Przykro mi iż coś nie działa! </h1>
+                    <br/>
+                    <p>Proszę opisz co dokładnie nie działa i co się wydarzyło.</p>
+                    <br/>
+                    {{ wtf.quick_form(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

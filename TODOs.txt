@@ -1,0 +1,130 @@
+v2:
+
+[+]BUG przy zmienianiu zdjęcia profilowego itp - spróbuj zamknąć alerta
+przeportować uprawnienia z v1
+[+]podkategorie i kategorie punktów
+[+]lista do zaznaczania pełna z podkategoriami
+[+]uczeń z widocznymi zaletami i wadami
+sortowanie tabelek
+wyszsukiwanie
+[+]kategorie punktów negatywne/pozytywne
+profil
+[X]wychowawcy -> klasy
+logi kto co dodaje
+pokazywać kto dodał punkt
+[+]noty dla uczniów
+[+]zmiany tła
+
+v2.1:
+zmiana nazwy klas
+wartości dla not
+dokumentacja
+export danych
+zmiana haseł
+
+v2.2:
+bezpieczeństwo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== STARE ==
+
+
+
+e2:
+
+Admini:
+	[D] możliwość edytowania superadmina
+	dodawanie admina
+	[D] usuwanie admina
+
+Osoby:
+	[D] dodawanie osób działające poprawnie
+	kategoria superAdmin
+
+Punkty:
+	Dodawanie masowe (przycisk dodaj więcej)
+	Filtry
+	Sortowanie
+
+Wszystko przetestowac na pustym db
+
+Uprawnienia (admin -> grupa)
+
+Magia
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== STARE ==
+
+e1:
+
+Oddziały:  
+	[D] margin pod przyciskiem dodawania
+Osoby (objekty): 
+	[D] zaimportować przycisk dodawania z oddziałów
+	[D] [Test] edycja!!!!!!!!!
+	[D] usuwanie
+Punkty:
+	wymyślić systemat nazwe
+	[D] filtrowanie wg klas
+	sortowanie
+	[D] dodawanie punktów xD
+	[D] wyjebać edytor
+	grubość hr w kolumnach
+	[D] złączyć imie/nazwisko, oddział w jedno i dodać komentarz
+Punkty - 2:
+	wymyślić systemat nazwe
+	[D]edytor kategorii punktów
+	walidator wartości!!!!!!!!!!!!!!!!!!
+
+
+długie tabelki: stopka sie nie przesuwa na dół
+
+[D]testy + rel v1-final

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Panel administratora{% endblock %}
+{% block body %}
+
+    <div class="intro-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="intro-message scale-up-top">
+                        <h1>Panel administratora</h1>
+                        <h3>Tylko dla administratorów!</h3>
+                        <hr class="intro-divider">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="float-container">
+        <div class="float-child">
+            <p class="sub"><i class="fa fa-lightbulb-o " style="margin-right: 1%;"></i>P O R A D A</p>
+            <div style="margin-left: 3%;">{{ tip }}</div>
+        </div>
+
+        <div class="float-child">
+            <p class="sub"><i class="fa fa-shield " style="margin-right: 1%;"></i>B E Z P I E C Z E Ń S T W O</p>
+            <div style="color: lime; margin-left: 3%;">Nie wykryto żadnych luk w bezpieczeństwie aplikacji!</div>
+        </div>
+
+        <div class="float-child" style="height: 420px;">
+            <p class="sub"><i class="fa fa-user" style="margin-right: 1%;"></i>N A J L I C Z N I E J S Z E K L A S Y</p>
+            <iframe src="/m/e/studentsByDep/najliczniejsze/" title="najlepsi"></iframe>
+        </div>
+
+        <div class="float-child" style="height: 420px;">
+            <p class="sub"><i class="fa fa-user" style="margin-right: 1%;"></i>N A J L E P S I </p>
+            <iframe src="/m/e/bestStudents/uczniowie najlepsi/" title="najlepsi"></iframe>
+        </div>
+
+        <div class="float-child">
+            <p class="sub"><i class="fa fa-info-circle " style="margin-right: 1%;"></i>S T A T Y S T Y K I</p>
+            <div style="margin-left: 47%;">Ilość:</div>
+            <div>Użytkowników: <span id="response1">0</span></div>
+            <div>Uczniów: <span id="response2">0</span></div>
+            <div>Oddziałów: <span id="response3">0</span></div>
+
+                </div>
+                <script>
+                    let data1 = {'name': 'Employee'}
+                    $.ajax({
+                        url: '/api/show_count',
+                        dataType: 'text',
+                        type: 'post',
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: data1,
+                        success: function (data, textStatus, jQxhr) {
+                            $('#response1').text(data);
+                        },
+                        error: function (jqXhr, textStatus, errorThrown) {
+                            console.log(errorThrown);
+                        }
+                    });
+                    let data2 = {'name': 'Object'}
+                    $.ajax({
+                        url: '/api/show_count',
+                        dataType: 'text',
+                        type: 'post',
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: data2,
+                        success: function (data, textStatus, jQxhr) {
+                            $('#response2').text(data);
+                        },
+                        error: function (jqXhr, textStatus, errorThrown) {
+                            console.log(errorThrown);
+                        }
+                    });
+                    let data3 = {'name': 'Department'}
+                    $.ajax({
+                        url: '/api/show_count',
+                        dataType: 'text',
+                        type: 'post',
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: data3,
+                        success: function (data, textStatus, jQxhr) {
+                            $('#response3').text(data);
+                        },
+                        error: function (jqXhr, textStatus, errorThrown) {
+                            console.log(errorThrown);
+                        }
+                    });
+                </script>
+            </div>
+
+
+{% endblock %}

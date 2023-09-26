@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ title }} | Kalkulator ZSE</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/zse2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://elektronik.cf/">
+    <meta property="og:title" content="Kalkulator ZSE">
+    <meta property="og:description"
+          content="Liczy rzeczy">
+    <meta name="theme-color" content="#1D4AA3">
+    <meta property="og:image" content="{{ url_for('static', filename='img/4.jpg') }}">
+    <meta name="twitter:card" content="summary_large_image">
+
+</head>
+<body>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<div class="wrapper" id="wrapper">
+    <button id='back' onclick="javascript:window.history.back();">Wróć</button>
+    {% block body %}
+    {% endblock %}
+    <div class="push"></div>
+
+</div>
+<div id="load"></div>
+
+<script>
+    let imageUrl = '/static/img/5.jpg'
+    if (window.location.href.endsWith("login")) {
+        let styles = {
+            backgroundColor : "white",
+            fontWeight: "",
+            padding: "20px",
+            borderRadius: "20px",
+            boxShadow: "0px 0px 25px black"
+        };
+        $('.center').css( styles );
+        $('#back').hide();
+        $('.wrapper').css('background-image', 'url(' + imageUrl + ')');
+    }
+</script>
+
+</body>
+</html>
