@@ -189,6 +189,62 @@ def list_roles():
     return jsonify(n)
 
 
+@api.route('get_depart_by_id', methods=['GET', 'POST'])
+@login_required
+def get_depart_by_id():
+    util.check_admin()
+
+    if request.form['id']:
+        id = request.form['id']
+    else:
+        return 'ERR', 400
+
+    try:
+        department = Department.query.get_or_404(id)
+    except Exception:
+        return 'ERR', 400
+
+    return jsonify(department.name, department.description, department.master_name)
+
+@api.route('update_depart_by_id', methods=['GET', 'POST'])
+@login_required
+def update_depart_by_id():
+    util.check_admin()
+
+    if request.form['id']:
+        id = request.form['id']
+    else:
+        return 'ERR', 400
+
+    try:
+        department = Department.query.get_or_404(id)
+    except Exception:
+        return 'ERR', 400
+
+    try:
+        if request.form['name']:
+            department.name = request.form['name']
+    except Exception:
+        pass
+    try:
+        if request.form['description']:
+            department.description = request.form['description']
+    except Exception:
+        pass
+    try:
+        if request.form['master_name']:
+            department.master_name = request.form['master_name']
+    except Exception:
+        pass
+
+    try:
+        db.session.add(department)
+        db.session.commit()
+    except Exception:
+        return 'ERR', 400
+
+    return 'OK', 200
+
 @api.route('list_role_parents', methods=['GET', 'POST'])
 @login_required
 def list_role_parents():
@@ -334,8 +390,8 @@ def get_depart_objects():
             util.handleException(e)
             return 'ERR', 400
     else:
-        x = PermissionUser.query.filter_by(userid=current_user.id, permissionid=request.form['id'])
-        if x:
+        z = PermissionUser.query.filter_by(userid=current_user.id, permissionid=request.form['id'])
+        if z:
             x = request.form['id']
             o = Object.query.filter_by(department_id=x).all()
             objects.append(o)
@@ -416,12 +472,14 @@ def get_object_points_for_view2():
                     v = []
                     v.append(t.id)
                     v.append(m.value)
+                    v.append(t.value)
                     points.append(v)
                     print(v)
                 else:
                     v = []
                     v.append(t.id)
                     v.append(0)
+                    v.append(t.value)
                     points.append(v)
                     print(v)
     except Exception as e:
@@ -450,6 +508,28 @@ def remove_logs():
     util.check_admin()
 
     db.session.query(Log).delete()
+    db.session.commit()
+
+    return 'OK', 200
+
+
+@api.route('get_rapports', methods=['GET', 'POST'])
+@login_required
+def get_rapports():
+    util.check_admin()
+    points = []
+
+    o = Info.query.all()
+
+    return jsonify(o)
+
+
+@api.route('remove_rapports', methods=['GET', 'POST'])
+@login_required
+def remove_rapports():
+    util.check_admin()
+
+    db.session.query(Info).delete()
     db.session.commit()
 
     return 'OK', 200
@@ -610,7 +690,7 @@ def add_point():
             return 'ERR', 400
     except Exception:
         return 'ERR', 400
-
+    # TODO make it search for count and find who added which points
     try:
         p = RoleUser.query.filter_by(userid=t, roleid=i).first()
         if p:
@@ -845,6 +925,27 @@ def update_subcategory():
         s = Role.query.filter_by(id=t).first()
         setattr(s, u, v)
 
+        db.session.add(s)
+        db.session.commit()
+
+    except Exception:
+        return 'ERR', 400
+
+    return 'OK', 200
+
+@api.route('update_password', methods=['GET', 'POST'])
+@login_required
+def update_password():
+    try:
+        t = Employee.query.get_or_404(current_user.get_id())
+
+        if request.form['password']:
+            u = request.form['password']
+        else:
+            return 'ERR', 400
+
+        s = Employee.query.filter_by(id=t).first() # TODO bug here
+        s.password = u
         db.session.add(s)
         db.session.commit()
 

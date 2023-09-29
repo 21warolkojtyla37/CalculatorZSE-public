@@ -55,7 +55,7 @@ def login():
             db.session.commit()
             util.import_settings([True, 'pl_PL', '/user_content/background_photo/default.png',
                                  '/user_content/footer_photo/default.png', 'Kalkulator ZSE',
-                                 '/user_content/background_photo/default.png', 'Mikołaj Patynowski 4I2', '2.0.0',
+                                 '/user_content/background_photo/default.png', 'Mikołaj Patynowski 4I2', '2.0.2',
                                  True, 0, 0])
             flash('Zostałeś zarejestrowany!')
             return redirect(url_for('auth.login'))

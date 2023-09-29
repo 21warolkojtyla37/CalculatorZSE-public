@@ -263,11 +263,11 @@ function createSubsite(title, context1) {
                                 let m;
                                 if (value[4] === true) m = 'checked="true"'; else m = '';
                                 $('.table').append(`<tr data-value="${value[3]}">
-                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat({value[0]}, 'name', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat({value[0]}, 'description', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat({value[0]}, 'value', this.value);"> </td>
+                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat(${value[0]}, 'name', this.value);"></td>
+                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat(${value[0]}, 'description', this.value);"></td>
+                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
                                 <td> ${value[6]} </td>
-                                <td> <input type="checkbox" ${m} oninput="editcat({value[0]}, 'multiple', this.checked);"> </td>
+                                <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
                                 <td id=${value.id}>                                
                                 <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
                                 <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
@@ -296,11 +296,11 @@ function createSubsite(title, context1) {
                             if (value[4] === true) m = 'checked="true"'; else m = '';
                             shown.push(value[0]);
                             $('.table').append(`<tr data-value="${value[3]}">
-                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat({value[0]}, 'name', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat({value[0]}, 'description', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat({value[0]}, 'value', this.value);"> </td>
+                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat(${value[0]}, 'name', this.value);"></td>
+                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat(${value[0]}, 'description', this.value);"></td>
+                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
                                 <td> ${value[6]} </td>
-                                <td> <input type="checkbox" ${m} oninput="editcat({value[0]}, 'multiple', this.checked);"> </td>
+                                <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
                                 <td id=${value.id}>                                
                                 <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
                                 <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
@@ -351,7 +351,7 @@ function createDataPanel() {
                     Import z Librusa
                 </a>
              </span>
-             <span style="text-align: center; width: 45%; margin: 0 2%;" onclick="modalNew()">
+             <span style="text-align: center; width: 45%; margin: 0 2%;" onclick="createPopUp('📲Eksport do Librusa', 'large', 'center', 'exportLibrus');openPopUp();">
                 <a class="btn btn-default btn-lg">
                     <i class="fa fa-plus"></i>
                     Eksport do Librusa
@@ -377,13 +377,13 @@ function createDataPanel() {
              <hr>
              <h3>📣 Zgłoszenia</h3>
              <div style="display: flex; margin: 1vh 2vw;">
-             <span style="text-align: center; width: 45%; margin: 0 3%;" onclick="modalNew()">
+             <span style="text-align: center; width: 45%; margin: 0 3%;" onclick="showReports()">
                 <a class="btn btn-default btn-lg">
                     <i class="fa fa-plus"></i>
                     Wyświetl listę zgłoszeń
                 </a>
              </span>
-             <span style="text-align: center; width: 45%; margin: 0 2%;" onclick="modalNew()">
+             <span style="text-align: center; width: 45%; margin: 0 2%;" onclick="removeData('rapports')">
                 <a class="btn btn-default btn-lg">
                     <i class="fa fa-plus"></i>
                     Usuń dotychczasowe zgłoszenia
@@ -601,6 +601,24 @@ function createPopUp(title, size, position, content) {
         </div>
       <div class="push"></div>
     </div>`
+    } else if (content == 'exportLibrus') {
+        middle = `<div id="modwrapper"><div id="left"></div>
+    
+        <div class="right">
+                <div id="first">
+                    <h2>Zapraszam do narzędzia eksportera!</h2>
+                    <p>Możesz wyeksportować dane z aplikacji do pliku csv.</p>
+                    <p>Mogą to być dane uczniów ale i nie tylko.</p>
+                    <p>Jeśli chcesz wyeksportować dane, kliknij przycisk poniżej.</p>
+                    <br/>
+                    <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
+                </div>
+                <div id="form" hidden><form>d</form></div>
+        </div>    
+        <div class="push"></div>
+    </div>`
+
+
     } else if (content == 'settings') {
         middle = `<div id="modwrapper"><div id="modleft">
              <ul class="choices">
@@ -613,6 +631,63 @@ function createPopUp(title, size, position, content) {
         <div class="modright">
         </div>
     </div>`
+    } else if (content == 'docs') {
+        middle = `<div class="help-header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="help-message scale-up-top">
+                            <h1>Instalacja i pierwsze uruchomienie aplikacji</h1>
+                            <h3>To nic trudnego!</h3>
+                            <div style="text-align: center">
+                                <a class="btn btn-default btn-lg">
+                                    <i class="fa fa-book"></i>
+                                    Przeczytaj teraz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="help-header2">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="help-message scale-up-top">
+                            <h1>Konfiguracja aplikacji</h1>
+                            <h3>W tym zabezpieczenia</h3>
+                            <div style="text-align: center">
+                                <a class="btn btn-default btn-lg">
+                                    <i class="fa fa-book"></i>
+                                    Przeczytaj teraz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="help-header3">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="help-message scale-up-top">
+                            <h1>Poradnik dla użytkowników</h1>
+                            <h3>Jak korzystać z aplikacji? </h3>
+                            <div style="text-align: center">
+                                <a class="btn btn-default btn-lg">
+                                    <i class="fa fa-book"></i>
+                                    Przeczytaj teraz
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`
+    } else if (content === 'rapports') {
+        middle = `<div id='modwrapper'><div id="right fillrap"></div></div>`
     } else {
         middle = `<div id='err'>No i znowu sie rozjehcało 😩😨😱🥵</div>`
     }
@@ -675,7 +750,7 @@ function createCalculator(title) {
                         $.each(dataz, function appendTable(key, value) {
                             $('.grid').append(`<div class='clickable cc' data-name='${value[1]}' id='${value[0]}'>
                                           <div class="classicons"><i onclick="removeDb('class', ${value[0]});" class="fa-thin fa-trash remove"></i>
-                                          <i onclick="editDb('class, ${value}');" class="fa-thin fa-pen-to-square modify"></i>  </div>                 
+                                          <i onclick="editClass(${value[0]});" class="fa-thin fa-pen-to-square modify"></i>  </div>                 
                                           <i class="fa fa-users"></i><h3> ${value[1]} </h3></div>
 
                                           `)
@@ -717,12 +792,17 @@ function hideWhatIHave() {
 }
 
 function reportBug() {
-    createPopUp('❗ Zgłoś błąd', 'large', 'center', 'reportBug');
+    createPopUp('<i class="fa-solid fa-brake-warning"></i> Zgłoś błąd', 'large', 'center', 'reportBug');
+    openPopUp();
+}
+
+function showDocs() {
+    createPopUp('<i class="fa-solid fa-book"></i> Dokumentacja', 'large', 'center', 'docs');
     openPopUp();
 }
 
 function settings() {
-    createPopUp('⚙️Ustawienia', 'large', 'center', 'settings');
+    createPopUp('<i class="fa-sharp fa-solid fa-gears"></i> ️Ustawienia', 'large', 'center', 'settings');
     openPopUp();
     change_setting_page('main');
 }
@@ -941,12 +1021,10 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
         }).catch(swal.noop);
     } else if (type === 'Object_create') {
         new swal({
-            title: '➕ Dodajesz nowego Ucznia', html: `<label for="Imie">Imię:</label>
-                 <input id="swal-input1" class="swal2-input" name="Imie">
-                 <label for="Nazwisko">Nazwisko:</label>
-                 <input id="swal-input2" class="swal2-input" name="Nazwisko">
-                 <label for="Opis">Opis:</label>  
-                 <input id="swal-input3" class="swal2-input" name="Opis">       
+            title: '➕ Dodajesz nowego Ucznia', html: `
+                 <input id="swal-input1" class="swal2-input" placeholder="Imie"><br>
+                 <input id="swal-input2" class="swal2-input" placeholder="Nazwisko"><br>
+                 <input id="swal-input3" class="swal2-input" placeholder="Opis">       
                 `, preConfirm: function () {
                 return new Promise(function (resolve) {
                     resolve([$('#swal-input1').val(), $('#swal-input2').val(), $('#swal-input3').val()])
@@ -1138,7 +1216,7 @@ function showClassCalculator(classId, className) {
             let datay = datax[0];
             $.each(datay, function appendTable(key, value) {
                 // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                $('#cl_studlist').append(`<div class="studObject" data-value='${value.id}' onclick="selectStud(${value.id}, '${value.first_name}', '${value.last_name}', '${value.comment}', '${className}', ${0})"> <span>${value.last_name} ${value.first_name} </span>
+                $('#cl_studlist').append(`<div class="studObject" data-value='${value.id}' onclick="selectStud(${value.id}, '${value.first_name}', '${value.last_name}', '${value.comment}', '${className}')"> <span>${value.last_name} ${value.first_name} </span>
                                           <span> ${value.comment} </span>
                                           </div>
                                           `)
@@ -1215,12 +1293,12 @@ function showClassCalculator(classId, className) {
 }
 
 
-function selectStud(id, fname, lname, desc, dep, sum) {
+function selectStud(id, fname, lname, desc, dep) {
     $(".cl_points").each(function () {
         $(this).removeAttr('hidden');
         $(`#cl_points_title`).html(`${fname.charAt(0).toUpperCase() + fname.slice(1)} ${lname.charAt(0).toUpperCase() + lname.slice(1)}`);
         $('#cl_points_title').data('value', id);
-        $(`#cl_points_subtitle`).html(`Mam ${sum} punktów i uczęszczam do klasy ${dep} | ${desc}`);
+        $(`#cl_points_subtitle`).html(`Mam <span id='ser_sum'>???</span> punktów i uczęszczam do klasy ${dep} | ${desc}`);
         $('#cl_nostud_icon').attr('class', 'fa-duotone fa-pen-circle fa-2xl')
         $('#cl_additional_data').html(`<div class="ff">
                 <p class="sub"><i class="fa-duotone fa-lightbulb"></i> D A N E</p>
@@ -1229,7 +1307,7 @@ function selectStud(id, fname, lname, desc, dep, sum) {
         $('#cl_additional_data').append(`<div class="ff">
                 <p class="sub"><i class="fa-duotone fa-lightbulb"></i> N O T Y</p>
                 <div id="notescu"></div>
-                <div style="width: 100%;"><input type="text" id="object-note-input" placeholder="zanotuj coś..."><br><button class="btn" onclick="addobjectnote()">Dodaj</button></div>
+                <div style="width: 100%;"><input type="text" id="object-note-input" placeholder="zanotuj coś..."><input type="number" id="object-note-val" placeholder="0"><br><button class="btn" onclick="addobjectnote()">Dodaj</button></div>
             </div>`)
     });
     showcurrentpoints();
@@ -1288,6 +1366,33 @@ function removeData(type) {
                 contentType: 'application/x-www-form-urlencoded',
                 success: function (data, textStatus, jQxhr) {
                     swal('Usunięto!', 'Logi zostały wymazane', 'success')
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    modalError(jqXhr.responseText);
+                }
+            });
+        })
+    } else if (type === 'rapports') {
+        new swal({
+            title: 'Czy na pewno?',
+            text: "Nie ma odwrotu - wszystkie zgłoszenia zostaną wymazane",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Usuwamy!',
+            cancelButtonText: 'Jednak nie',
+            confirmButtonClass: 'btn btn-success',
+            cancelButtonClass: 'btn btn-danger',
+            buttonsStyling: false
+        }).then(function () {
+            $.ajax({
+                url: '/api/remove_rapports',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function (data, textStatus, jQxhr) {
+                    swal('Usunięto!', 'Zgłoszenia zostały wymazane', 'success')
                 },
                 error: function (jqXhr, textStatus, errorThrown) {
                     modalError(jqXhr.responseText);
@@ -1606,7 +1711,7 @@ function change_setting_page(page) {
         <h4>Więcej opcji na razie nie dodaje</h4>`);
     } else if (page === 'account') {
         $('#accounts').addClass('active');
-        $('.modright').html('<h4>Więcej opcji na razie nie dodaje</h4>zmień dane swojego konta<br>zmień hasło');
+        $('.modright').html("<h4>Więcej opcji na razie nie dodaje</h4>Zmienić twoje dane może Administrator w swoim panelu.<button onclick='updatepassword(`s`)'>Zmień hasło</button>");
     }
 }
 
@@ -1700,6 +1805,7 @@ function showonly(type) {
 
 
 function showcurrentpoints() {
+    let sum = 0;
     $('.cl_active').each(function () {
         $(this).removeClass('cl_active');
     });
@@ -1715,17 +1821,18 @@ function showcurrentpoints() {
             let vdata = JSON.parse(data);
             for (let i = 0; i < vdata.length; i++) {
                 let x = $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_counter').children('.cl_points_counter_in')
-                console.log(x)
                 if (x.length !== 0) {
+                    console.log(vdata[i][2])
                     x.val(vdata[i][1]);
                 } else {
-                    console.log('trigger')
                     if (vdata[i][1] == 1) {
                         $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_one').children('.one').addClass('cl_active');
                     } else {
                         $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_zero').children('.zero').addClass('cl_active');
                     }
                 }
+                sum = sum + parseInt(vdata[i][2] * vdata[i][1]);
+                $('#ser_sum').text(sum.toString());
             }
         },
         error: function (jqXhr, textStatus, errorThrown) {
@@ -1750,12 +1857,15 @@ function showcurrentpoints() {
                                           <span><i onclick="removenote(${value[0]})" class="fa-trash fa-duotone"></i></span>
                                           </div>
                                           `)
+                sum = sum + parseInt(value[2]);
+                $('#ser_sum').text(sum.toString());
             });
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
         }
     })
+    $('#ser_sum').text(sum.toString());
 }
 
 function addpoint(id, value) {
@@ -1798,7 +1908,8 @@ function modifyobject(type, value) {
 
 function addobjectnote() {
     const ob = document.getElementById('object-note-input');
-    let xdata = {'id': $('#cl_points_title').data('value'), 'note': ob.value};
+    const oc = document.getElementById('object-note-val');
+    let xdata = {'id': $('#cl_points_title').data('value'), 'note': ob.value, value: oc.value};
     $.ajax({
         url: `/api/add_object_note`,
         dataType: 'text',
@@ -1868,8 +1979,11 @@ function editprimcat(id, key, value) {
 }
 
 function editcat(id, key, value) {
-    console.log(value)
-    let xdata = {'id': id, 'key': key, 'value': value};
+    if (value == '' || value == null) {
+        value = 0;
+    }
+    let xdata = {'id': id, 'key': key, 'value': value.toString()};
+    console.log(xdata)
     $.ajax({
         url: `/api/update_subcategory`,
         dataType: 'text',
@@ -1956,6 +2070,7 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
     }).catch(swal.noop);
 }
 
+
 function updatename() {
     let val = $('#name_changeable').val();
     $.ajax({
@@ -1970,6 +2085,102 @@ function updatename() {
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
+        }
+    })
+}
+
+function updatepassword(param) {
+    //open swal and ask for a password
+    new swal({
+        title: 'Zmiana hasła',
+        html: `<input id="swal-input2" class="swal2-input" placeholder="Nowe hasło" type="password">` + `<input id="swal-input3" class="swal2-input" placeholder="Powtórz nowe hasło" type="password">`,
+        preConfirm: function () {
+            return new Promise(function (resolve) {
+                resolve([$('#swal-input2').val(), $('#swal-input3').val()])
+            })
+        }
+    }).then(function (result) {
+        if (result.value[0] === result.value[1]) {
+            $.ajax({
+                url: '/api/update_password',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/x-www-form-urlencoded',
+                data: {'password': result.value[0]},
+                success: function (data, textStatus, jQxhr) {
+                    modalDone();
+                    window.location.replace('/auth/logout');
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    modalError(jqXhr.responseText);
+                }
+            });
+        } else {
+            modalError('Hasła nie są takie same!');
+        }
+    });
+}
+
+function editClass(id) {
+
+    //get class data from api
+    $.ajax({
+        url: '/api/get_depart_by_id',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: {'id': id},
+        success: function (data, textStatus, jQxhr) {
+            let vdata = JSON.parse(data);
+            console.log(vdata)
+            //open swal and ask for a password
+            new swal({
+                title: 'Edytujesz klasę',
+                text: "Możesz zmienić każdy parametr",
+                type: 'info',
+                html: `<input id="swal-input1" class="swal2-input" value="${vdata[0]}">` + `<input id="swal-input2" class="swal2-input" value="${vdata[1]}">`,
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        resolve([$('#swal-input1').val(), $('#swal-input2').val(),
+
+                        ])
+                    })
+                },
+                onOpen: function () {
+                    $('#swal-input1').focus()
+                }
+            }).then(function (result) {
+                $.ajax({
+                    url: '/api/update_depart_by_id',
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: {'id': id, 'name': result.value[0], 'description': result.value[1]},
+                    success: function (data, textStatus, jQxhr) {
+                        modalDone();
+                        xReload('calc');
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            });
+        },
+        error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
+    });
+}
+
+function showReports() {
+    createPopUp('Raporty', 'large', 'center', 'rapports');
+    openPopUp();
+    $.ajax({
+        url: '/api/get_rapports',
+        type: 'get',
+        success: function (data, textStatus, jQxhr) {
+            let xdata = JSON.parse(data)
+            $('#fillrap').innerHTML(xdata)
         }
     })
 }

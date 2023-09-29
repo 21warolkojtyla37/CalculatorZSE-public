@@ -121,6 +121,7 @@ class RoleUser(db.Model):
     userid = db.Column(db.Integer)
     roleid = db.Column(db.Integer)
     value = db.Column(db.Integer)
+    addedby = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=True)
 
     def __repr__(self):
         return '<User/Role: {}>'.format(self.relationid)
