@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import os
 import uuid
 import app
+import random
 
 from . import api
 from .. import util
@@ -32,7 +33,7 @@ def send_report():
     y = request.form['desc']
 
     if x == 'bug' or x == 'info' or x == 'other':
-        bug = Info(type=x, description=y)
+        bug = Info(type=x, description=y, uid=current_user.id)
 
         try:
             db.session.add(bug)
@@ -318,6 +319,9 @@ def create_depart():
     try:
         db.session.add(dep)
         db.session.commit()
+        v = PermissionUser(userid=current_user.id, permissionid=dep.id)
+        db.session.add(v)
+        db.session.commit()
         return 'OK', 200
     except Exception as e:
         util.handleException(e)
@@ -402,10 +406,7 @@ def get_depart_objects():
 @api.route('add_depart_object', methods=['GET', 'POST'])
 @login_required
 def add_depart_object():
-    util.check_admin()
-
-    print(request.form)
-
+    #TODO safety
     try:
         if request.form['id']:
             x = request.form['id']
@@ -459,7 +460,8 @@ def get_object_points_for_view():
 @api.route('get_object_points_for_view2', methods=['GET', 'POST'])
 @login_required
 def get_object_points_for_view2():
-    util.check_admin()
+    #util.check_admin()
+    #todo safety
     points = []
 
     try:
@@ -673,7 +675,8 @@ def get_value():
 @api.route('add_point', methods=['GET', 'POST'])
 @login_required
 def add_point():
-    util.check_admin()
+    #todo safety
+    #util.check_admin()
     try:
         if request.form['value']:
             v = request.form['value']
@@ -904,6 +907,41 @@ def update_category():
     return 'OK', 200
 
 
+@api.route('create_employee', methods=['POST'])
+@login_required
+def create_employee():
+    try:
+        first_name = request.form.get('first_name', '')
+        last_name = request.form.get('last_name', '')
+        email = request.form.get('email', '')
+        password = request.form.get('password', '12PassToChange#@$%*')
+        username = request.form.get('username', f'{first_name[:3]}{last_name[:3]}{random.randint(10, 90)}')
+        is_admin = bool(request.form.get('is_admin', False))
+
+        e = Employee(first_name=first_name, last_name=last_name, email=email, password=password, username=username, is_admin=is_admin)
+
+        db.session.add(e)
+        db.session.commit()
+
+    except Exception:
+        return 'ERR', 400
+
+    return 'OK', 200
+
+
+@api.route('get_my_data', methods=['GET', 'POST'])
+@login_required
+def get_my_data():
+    try:
+        t = Employee.query.get_or_404(current_user.get_id())
+
+        data = {'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name, 'email': t.email, 'username': t.username, 'profile_photo': t.profile_photo}
+
+        return jsonify(data)
+    except Exception:
+        return 'ERR', 400
+
+
 @api.route('update_subcategory', methods=['GET', 'POST'])
 @login_required
 def update_subcategory():
@@ -921,6 +959,12 @@ def update_subcategory():
             v = request.form['value']
         else:
             return 'ERR', 400
+
+        if u == 'multiple':
+            if v == 'true' or v == 1:
+                v = True
+            else:
+                v = False
 
         s = Role.query.filter_by(id=t).first()
         setattr(s, u, v)

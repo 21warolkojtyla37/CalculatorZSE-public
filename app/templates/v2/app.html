@@ -36,9 +36,9 @@
         <li onclick="xReload('categories')" id="categoryli"><a>Kategorie</a></li>
     {% endif %}
     <li onclick="xReload('calc')" id="calculatorli"><a>Kalkulator</a></li>
+    {% if current_user.is_admin %}
     <li onclick="xReload('data')" id="datali"><a>Dane</a></li>
-    </div>
-    </div>
+    {% endif %}
 </nav>
 <div class="wrapper" id="wrapper">
     <div class="body">

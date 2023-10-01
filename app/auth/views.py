@@ -35,11 +35,15 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home.dashboard'))
-    x = util.get_setting_value("allow_register")
-    if int(x) == 1:
+    try:
+        x = util.get_setting_value("allow_register")
+        if int(x) == 1:
+            canregister = True
+        else:
+            canregister = False
+    except:
+        print('DB malfunction, app is probably not configured yet or it is broken. Registering is enabled for now, which may by considered as unsafe by some users.')
         canregister = True
-    else:
-        canregister = False
     rows = db.session.query(Employee).count()
     if rows == 0:
         form = RegistrationForm()

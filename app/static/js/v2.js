@@ -3,6 +3,7 @@
 let reload = 'main';
 let reloadId = 0;
 let reloadIdChild = 0;
+let is_admin = false;
 
 let categories = parseCategoriesX();
 let points = parsePointsX(categories);
@@ -66,10 +67,10 @@ function createSubsite(title, context1) {
           <hr class="intro-divider">
         <div class="opt">
           <a onclick="showDocs()" class="clickable">
-            <i class="fa fa-book"></i> Zobacz dokumentację
+            <i class="fa-duotone fa-book"></i> Zobacz dokumentację
           </a>
           <a onclick="reportBug()" class="clickable">
-            <i class="fa fa-bug "></i> Zgłoś błąd
+            <i class="fa-duotone fa-info-circle "></i> Zgłoś coś
           </a>
         </div>
     `
@@ -80,9 +81,11 @@ function createSubsite(title, context1) {
             <table class="table table-striped table-bordered">
               <thead>
                 <tr>
+                  <th width="10%"> Zdjęcie </th>
                   <th width="10%"> Imię/Nazwisko</th>
-                  <th width="30%"> Uprawnienia do: </th>
-                  <th width="30%"> E-mail </th>
+                  <th width="10%"> Nazwa użytkownika</th>
+                  <th width="20%"> Uprawnienia do: </th>
+                  <th width="20%"> E-mail </th>
                   <th width="15%"> Akcje </th>
                 </tr>
               </thead>
@@ -195,17 +198,20 @@ function createSubsite(title, context1) {
                             $.each(dataa, function appendTable(key, value) {
                                 let is_pies = '';
                                 if (value.is_admin === true) {
-                                    is_pies = '<br>👑 Administrator totalny';
+                                    is_pies = `👑 Administrator totalny<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
                                 } else {
-                                    is_pies = `Nie moge pobrać tych informacji<br><a hrefh="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
+                                    is_pies = `Nie moge pobrać tych informacji<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
                                 }
                                 $('.table').append(`<tr>
+                                            <td> <img src="/static/user_content/profile_photo/${value.profile_photo}" width="100px" height="100px"> </td>
                                           <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'first_name', this.value);" value='${value.first_name}' id='ddsd'> <input oninput="editemp(${value.id}, 'last_name', this.value)" class="undis" type="text" value="${value.last_name}"> </td>
+                                          <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'username', this.value);" value='${value.username}'> </td> 
                                           <td> <!--${value.permissions}--!> ${is_pies} </td>
                                           <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'email', this.value);" value='${value.email}'> </td>
                                           <td id=${value.id}>
                                                 <a class="clickable" onclick="removeDb('employee', ${value.id})">
-                                                <i class="fa fa-trash"></i> Usuń</a></td>
+                                                <i class="fa fa-trash"></i> Usuń</a><a class="clickable" onclick="resetPassword(${value.id})">
+                                                <i class="fa fa-key-skeleton"></i> Reset hasła</a></td>
                                           `)
                             });
                         },
@@ -311,7 +317,7 @@ function createSubsite(title, context1) {
 
                     }
                 }
-                $('.table').append('Wyświetlam: <span id="shown">' + data + '</span> z <span id="total">' + data + '</span>');
+                $('.table').append('<td colspan="2" style="border:none !important;">Wyświetlam: <span id="shown">' + data + '</span> z <span id="total">' + data + '</span></td>');
             }
         },
         error: function (jqXhr, textStatus, errorThrown) {
@@ -333,10 +339,10 @@ function createDataPanel() {
           <hr class="intro-divider">
         <div class="opt">
           <a onclick="showDocs()" class="clickable">
-            <i class="fa fa-book"></i> Zobacz dokumentację
+            <i class="fa-duotone fa-book"></i> Zobacz dokumentację
           </a>
           <a onclick="reportBug()" class="clickable">
-            <i class="fa fa-bug "></i> Zgłoś błąd
+            <i class="fa-duotone fa-info-circle "></i> Zgłoś coś
           </a>
         </div>
     `
@@ -443,6 +449,7 @@ function createMainPanel() {
 
     });
 
+
     let mainPanel = `
         <div class="intro-header">
             <div class="container">
@@ -461,17 +468,17 @@ function createMainPanel() {
         <div class="float-container">
             <div class="float-child">
                 <p class="sub"><i class="fa-duotone fa-lightbulb"></i> P O R A D A</p>
-                <div style="margin-left: 3%;">By wejść na tą stronę można użyć przeglądarki na np. komputerze.</div>
+                <div style="margin-left: 3%;" id="tipinfo"></div>
+                <button class="btn" onclick=tip();>Następna porada</button>
             </div>
 
             <div class="float-child">
                 <p class="sub"><i class="fa-duotone fa-brake-warning"></i> Z G Ł O S Z E N I A</p>
-                <div id="report"><div id='repcontent'></div><button class='btn'>zobacz więcej</button</div></div>
+                <div id="report"><div id='repcontent'></div><button class='btn' onclick='showReports()'>zobacz więcej</button</div></div>
             </div>
             
             <div class="float-child">
                 <p class="sub"><i class="fa-duotone fa-head-side"></i> P R O F I L</p>
-                <div style="margin-left: 3%;">Pobieranie danych...</div>
                 <div id="profile"></div>
                 <div id="profile_settings">
                 <button class="btn" onclick="modalNew('ProfilePhoto_create')">Zmień zdjęcie profilowe</button>
@@ -488,7 +495,28 @@ function createMainPanel() {
 
             </div>
             <script>
+            function loadProfileSite() {
+                $.ajax({
+                    url: '/api/get_my_data',
+                    dataType: 'text',
+                    type: 'get',
+                    contentType: 'application/x-www-form-urlencoded',
+                    success: function (data, textStatus, jQxhr) {
+                        let datay = JSON.parse(data);
+                        if (datay.is_admin) is_admin = true; else is_admin = false;
+                        $('#profile').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-user"></i>' + datay.first_name + ' ' + datay.last_name + '<div>');
+                        $('#profile').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-envelope"></i>' + datay.email + '<div>');
+                    }
+                });
+                };
+                
+                loadProfileSite();
+                
             function showReportsSite() {
+                if (is_admin === false) {
+                    $('#report').parent().remove();
+                    return;
+                    }
                 $.ajax({
                     url: '/api/list_reports',
                     dataType: 'text',
@@ -513,6 +541,24 @@ function createMainPanel() {
                     }
                 });
             };
+            
+            function tip() {
+                let tips = [
+                    'By wejść na tą stronę można użyć przeglądarki na np. komputerze.',
+                    'Aplikacja jest w fazie testów, więc mogą wystąpić błędy.',
+                    'Zgłaszaj błędy i propozycje, by pomóc w rozwoju aplikacji.',
+                    'By dostać się do aplikacji należy posiadać na niej konto',
+                    'Ta aplikacja jest rozwijana już dwa lata a ciągle niewiele działa',
+                    'Aplikacja jest rozwijana przez jedną osobę, więc nie ma co się dziwić, że jest tak mało funkcji',
+                    'Edytowanie tabel jest tak proste, że nawet dziecko by sobie z tym poradziło',
+                    'Dodawanie punktów jest teraz lekkie i przyjemne.'
+                ];
+                let ind = Math.floor(Math.random()*tips.length);
+            
+                $('#tipinfo').text(tips[ind]);
+            }
+            
+            tip();
             
             showReportsSite();
             
@@ -563,6 +609,7 @@ function createMainPanel() {
                 };
                 
                 loadStatsSite();
+               
             </script>
         </div>
     `
@@ -581,7 +628,13 @@ function createPopUp(title, size, position, content) {
     let middle = ''
 
     if (content == 'reportBug') {
-        middle = `<p>Podaj co sie wydarzyło i co cie dręczy</p><input name="opinion" type="text" id="opinion" maxlength="1000"><button id="send" class="popbutton" onclick="sendReport('bug', $('#opinion').val());">📤Wyślij</button>`
+        middle = `<p style="text-align: center;">O czym chcesz nam powiedzieć?</p>
+        <div class="buttons">
+        <a class="disabled" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('bug');">Zgłaszam błąd</a>
+        <a class="clickable" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('info');">Mam pomysł</a>
+        <a class="clickable" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('other');">Coś innego</a>
+        </div><input name="opinion" type="text" id="opinion" maxlength="1000"><input id="tiptypex" hidden value="bug"><br>
+        <button id="send" class="popbutton" onclick="sendReport($('#opinion').val(), $('#tiptypex').val());">📤Wyślij</button>`
     } else if (content == 'editMode') {
 
     } else if (content == 'empty') {
@@ -597,7 +650,7 @@ function createPopUp(title, size, position, content) {
                     <br/>
                   <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
               </div>
-              <div id="form" hidden><form>d</form></div>
+              <div id="form" hidden><form>Oczekuje na wygląd przykładowych danych...</form></div>
         </div>
       <div class="push"></div>
     </div>`
@@ -613,13 +666,14 @@ function createPopUp(title, size, position, content) {
                     <br/>
                     <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
                 </div>
-                <div id="form" hidden><form>d</form></div>
+                <div id="form" hidden><form>Oczekuje na wygląd przykładowych danych...</form></div>
         </div>    
         <div class="push"></div>
     </div>`
 
 
     } else if (content == 'settings') {
+        if (is_admin === false) return modalError('Niestety na tą chwilę tylko Administratorzy mogą zmieniać wybrane opcje tej aplikacji.'); //TODO
         middle = `<div id="modwrapper"><div id="modleft">
              <ul class="choices">
               <li class="choice" onclick="change_setting_page('main')" id="mainsetting"><i class="fa-duotone fa-house"></i> Główne
@@ -687,7 +741,7 @@ function createPopUp(title, size, position, content) {
             </div>
         </div>`
     } else if (content === 'rapports') {
-        middle = `<div id='modwrapper'><div id="right fillrap"></div></div>`
+        middle = `<div id='modwrapper'><div id="right"><div id="fillrap"></div></div></div>`
     } else {
         middle = `<div id='err'>No i znowu sie rozjehcało 😩😨😱🥵</div>`
     }
@@ -710,10 +764,10 @@ function createCalculator(title) {
           <hr class="intro-divider">
          <div class="opt">
           <a onclick="showDocs()" class="clickable">
-            <i class="fa fa-book"></i> Zobacz dokumentację
+            <i class="fa-duotone fa-book"></i> Zobacz dokumentację
           </a>
           <a onclick="reportBug()" class="clickable">
-            <i class="fa fa-bug "></i> Zgłoś błąd
+            <i class="fa-duotone fa-info-circle "></i> Zgłoś coś
           </a>
         </div>
     `
@@ -792,7 +846,7 @@ function hideWhatIHave() {
 }
 
 function reportBug() {
-    createPopUp('<i class="fa-solid fa-brake-warning"></i> Zgłoś błąd', 'large', 'center', 'reportBug');
+    createPopUp('<i class="fa-solid fa-brake-warning"></i> Zgłoś coś', 'large', 'center', 'reportBug');
     openPopUp();
 }
 
@@ -841,8 +895,8 @@ function xReload(site_now) {
     }, 150);
 }
 
-function sendReport(type, str) {
-    let xdata = {'type': 'bug', 'desc': str};
+function sendReport(str, type) {
+    let xdata = {'type': type, 'desc': str};
     $.ajax({
         url: '/api/send_report',
         dataType: 'text',
@@ -869,8 +923,7 @@ function removeReport(id) {
         contentType: 'application/x-www-form-urlencoded',
         data: xdata,
         success: function (data, textStatus, jQxhr) {
-            $('.push').text(data);
-            closePopUp();
+            //closePopUp();
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
@@ -894,7 +947,7 @@ function modalNew(type) {
     if (type === 'Employee_create') {
         new swal({
             title: '➕ Dodajesz nowego Administratora',
-            html: '<input id="swal-input1" class="swal2-input" value="Imię">' + '<input id="swal-input2" class="swal2-input" value="Nazwisko">' + '<input id="swal-input3" class="swal2-input" value="E-mail">',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Imię">' + '<input id="swal-input2" class="swal2-input" placeholder="Nazwisko">' + '<input id="swal-input3" class="swal2-input" placeholder="E-mail">' + '<input id="swal-input4" class="swal2-input" placeholder="Hasło">' + '<input id="swal-input5" class="swal2-input" placeholder="Powtórz hasło">',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     resolve([$('#swal-input1').val(), $('#swal-input2').val(), $('#swal-input3').val()
@@ -906,12 +959,34 @@ function modalNew(type) {
                 $('#swal-input1').focus()
             }
         }).then(function (result) {
-            new swal(JSON.stringify(result.value[0]))
-        }).catch(swal.noop);
+            if ($('#swal-input4').val() === $('#swal-input5').val()) {
+                let xdata = {
+                    'first_name': result.value[0], 'last_name': result.value[1], 'email': result.value[2], 'password': result.value[3]
+                };
+                $.ajax({
+                    url: '/api/create_employee',
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: xdata,
+                    success: function (data, textStatus, jQxhr) {
+                        closePopUp();
+                        modalDone();
+                        xReload(reload);
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        closePopUp();
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            } else {
+                modalError('Hasła nie są takie same!');
+            }
+        });
     } else if (type === 'Role_create') {
         new swal({
             title: '➕ Dodajesz nową Podkategorię',
-            html: '<input id="swal-input1" class="swal2-input" value="Nazwa">' + '<input id="swal-input2" class="swal2-input" value="Opis">' + '<label for="quantity">Podaj wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000">' + '<label for="boo">Czy można dodać tylko raz?</label>' + '<input id="swal-input4" class="swal2-check" type="checkbox" id="boo">' + '<label for="drop">Do jakiej kategorii ma należeć?</label>' + '<select id="items" class="swal2-select" name="items"></select>',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' + '<label for="boo">Czy można dodać tylko raz?</label>' + '<input id="swal-input4" class="swal2-check" type="checkbox" id="boo"><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label>' + '<select id="items" class="swal2-select" name="items"></select>',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     console.log($('#swal-input4').is(':checked'));
@@ -955,7 +1030,7 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
     } else if (type === 'ParentRole_create') {
         new swal({
             title: '➕ Dodajesz nową Kategorię',
-            html: '<label for="swal-input1">Podaj nazwę</label>' + '<input id="swal-input1" class="swal2-input" value="Nazwa">' + '<label htmlFor="favcolor">Wybierz kolor:</label>' + '<input type="color" class="swal2-input" style="width: 20%;" id="favcolor" name="favcolor" value="#ff0000">',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input hidden type="color" class="swal2-input" style="width: 20%;" id="favcolor" name="favcolor" value="#ff4444"><p>Kolor i emotikonę wybrać można później.</p>',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     resolve([$('#swal-input1').val(), $('#favcolor').val()])
@@ -2004,29 +2079,34 @@ function iconpicker(id) {
     createPopUp('Wybierz emotkę', 'small', 'center', 'empty');
     openPopUp();
     $('#popdata').append(`<div class="emoji-picker-container">
-    <i class="fa-duotone fa-handshake" onclick="editprimcat(${id}, 'emoji', 'fa-handshake')"></i>
-    <i class="fa-duotone fa-face-angry" onclick="editprimcat(${id}, 'emoji', 'fa-face-angry')"></i>
-    <i class="fa-duotone fa-money-bill" onclick="editprimcat(${id}, 'emoji', 'fa-money-bill')"></i>
-    <i class="fa-duotone fa-comments" onclick="editprimcat(${id}, 'emoji', 'fa-comments')"></i>
-    <i class="fa-duotone fa-graduation-cap" onclick="editprimcat(${id}, 'emoji', 'fa-graduation-cap')"></i>
-    <i class="fa-duotone fa-atom" onclick="editprimcat(${id}, 'emoji', 'fa-atom')"></i>
-    <i class="fa-duotone fa-award" onclick="editprimcat(${id}, 'emoji', 'fa-award')"></i>
-    <i class="fa-duotone fa-baby" onclick="editprimcat(${id}, 'emoji', 'fa-baby')"></i>
-    <i class="fa-duotone fa-city" onclick="editprimcat(${id}, 'emoji', 'fa-city')"></i>
-    <i class="fa-duotone fa-bacon" onclick="editprimcat(${id}, 'emoji', 'fa-bacon')"></i>
-    <i class="fa-duotone fa-dumpster-fire" onclick="editprimcat(${id}, 'emoji', 'fa-dumpster-fire')"></i>
-    <i class="fa-duotone fa-dragon" onclick="editprimcat(${id}, 'emoji', 'fa-dragon')"></i>
-    <i class="fa-duotone fa-user-bounty-hunter" onclick="editprimcat(${id}, 'emoji', 'fa-user-bounty-hunter')"></i>
-    <i class="fa-duotone fa-user-astronaut" onclick="editprimcat(${id}, 'emoji', 'fa-user-astronaut')"></i>
-    <i class="fa-duotone fa-flag-checkered" onclick="editprimcat(${id}, 'emoji', 'fa-flag-checkered')"></i>
-    <i class="fa-duotone fa-user-cowboy" onclick="editprimcat(${id}, 'emoji', 'fa-user-cowboy')"></i>
-    <i class="fa-duotone fa-user-ninja" onclick="editprimcat(${id}, 'emoji', 'fa-user-ninja')"></i>
-    <i class="fa-duotone fa-user-secret" onclick="editprimcat(${id}, 'emoji', 'fa-user-secret')"></i>
-    <i class="fa-duotone fa-user-tie" onclick="editprimcat(${id}, 'emoji', 'fa-user-tie')"></i>
-    <i class="fa-duotone fa-user-graduate" onclick="editprimcat(${id}, 'emoji', 'fa-user-graduate')"></i>
-    <i class="fa-duotone fa-user-md" onclick="editprimcat(${id}, 'emoji', 'fa-user-md')"></i>
-    <i class="fa-duotone fa-user-injured" onclick="editprimcat(${id}, 'emoji', 'fa-user-injured')"></i>
+    <i class="fa-duotone fa-handshake" onclick="editprimcat(${id}, 'emoji', 'fa-handshake');ec();"></i>
+    <i class="fa-duotone fa-face-angry" onclick="editprimcat(${id}, 'emoji', 'fa-face-angry');ec();"></i>
+    <i class="fa-duotone fa-money-bill" onclick="editprimcat(${id}, 'emoji', 'fa-money-bill');ec();"></i>
+    <i class="fa-duotone fa-comments" onclick="editprimcat(${id}, 'emoji', 'fa-comments');ec();"></i>
+    <i class="fa-duotone fa-graduation-cap" onclick="editprimcat(${id}, 'emoji', 'fa-graduation-cap');ec();"></i>
+    <i class="fa-duotone fa-atom" onclick="editprimcat(${id}, 'emoji', 'fa-atom');ec();"></i>
+    <i class="fa-duotone fa-award" onclick="editprimcat(${id}, 'emoji', 'fa-award');ec();"></i>
+    <i class="fa-duotone fa-baby" onclick="editprimcat(${id}, 'emoji', 'fa-baby');ec();"></i>
+    <i class="fa-duotone fa-city" onclick="editprimcat(${id}, 'emoji', 'fa-city');ec();"></i>
+    <i class="fa-duotone fa-bacon" onclick="editprimcat(${id}, 'emoji', 'fa-bacon');ec();"></i>
+    <i class="fa-duotone fa-dumpster-fire" onclick="editprimcat(${id}, 'emoji', 'fa-dumpster-fire');ec();"></i>
+    <i class="fa-duotone fa-dragon" onclick="editprimcat(${id}, 'emoji', 'fa-dragon');ec();"></i>
+    <i class="fa-duotone fa-user-bounty-hunter" onclick="editprimcat(${id}, 'emoji', 'fa-user-bounty-hunter');ec();"></i>
+    <i class="fa-duotone fa-user-astronaut" onclick="editprimcat(${id}, 'emoji', 'fa-user-astronaut');ec();"></i>
+    <i class="fa-duotone fa-flag-checkered" onclick="editprimcat(${id}, 'emoji', 'fa-flag-checkered');ec();"></i>
+    <i class="fa-duotone fa-user-cowboy" onclick="editprimcat(${id}, 'emoji', 'fa-user-cowboy');ec();"></i>
+    <i class="fa-duotone fa-user-ninja" onclick="editprimcat(${id}, 'emoji', 'fa-user-ninja');ec();"></i>
+    <i class="fa-duotone fa-user-secret" onclick="editprimcat(${id}, 'emoji', 'fa-user-secret');ec();"></i>
+    <i class="fa-duotone fa-user-tie" onclick="editprimcat(${id}, 'emoji', 'fa-user-tie');ec();"></i>
+    <i class="fa-duotone fa-user-graduate" onclick="editprimcat(${id}, 'emoji', 'fa-user-graduate');ec();"></i>
+    <i class="fa-duotone fa-user-md" onclick="editprimcat(${id}, 'emoji', 'fa-user-md');ec();"></i>
+    <i class="fa-duotone fa-user-injured" onclick="editprimcat(${id}, 'emoji', 'fa-user-injured');ec();"></i>
     </div>`);
+}
+
+function ec() {
+    closePopUp();
+    xReload('categories');
 }
 
 function changeParent(id) {
@@ -2176,13 +2256,42 @@ function showReports() {
     createPopUp('Raporty', 'large', 'center', 'rapports');
     openPopUp();
     $.ajax({
-        url: '/api/get_rapports',
-        type: 'get',
-        success: function (data, textStatus, jQxhr) {
-            let xdata = JSON.parse(data)
-            $('#fillrap').innerHTML(xdata)
+        url: '/api/get_rapports', type: 'get', success: function (data, textStatus, jQxhr) {
+            for (const x of data) {
+                $('#fillrap').append(`<br><p id='rr_${x.id}'>${x.type} - ${x.description} | ${x.time} | UID ${x.uid}<i class="fa-trash fa-duotone" onclick="removeReport(${x.id});$('#rr_${x.id}').remove()"></i></p>`)
+            }
         }
     })
+}
+
+function resetPassword(id) {
+    new swal({
+        title: 'Resetuj hasło',
+        text: 'Czy na pewno chcesz zresetować hasło użytkownika?',
+        type: 'warning',
+        html: `<input id="swal-input1" class="swal2-input" placeholder="Nowe hasło" type="password">` + `<input id="swal-input2" class="swal2-input" placeholder="Powtórz nowe hasło" type="password">`,
+        preConfirm: function () {
+            return new Promise(function (resolve) {
+                resolve([$('#swal-input1').val(), $('#swal-input2').val()])
+                if ($('#swal-input1').val() !== $('#swal-input2').val()) {
+                    modalError('Hasła nie są takie same!');
+                } else {
+                    $.ajax({
+                        url: '/api/update_employee',
+                        dataType: 'text',
+                        type: 'post',
+                        contentType: 'application/x-www-form-urlencoded',
+                        data: {id: id, key: 'password', value: $('#swal-input1').val()},
+                        success: function (data, textStatus, jQxhr) {
+                            modalDone();
+                        }, error: function (jqXhr, textStatus, errorThrown) {
+                            modalError(jqXhr.responseText);
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
 $(document).on('click', '#popclose', function () {

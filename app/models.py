@@ -10,6 +10,7 @@ class Employee(UserMixin, db.Model):
     username: str
     first_name: str
     last_name: str
+    profile_photo: str
     is_admin: bool
     __tablename__ = 'employees'
 
@@ -157,12 +158,14 @@ class Info(db.Model):
     type: str
     description: str
     time: str
+    uid: str
     __tablename__ = 'infos'
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(30))
     description = db.Column(db.String(200))
     time = db.Column(db.DateTime(), default=db.func.now())
+    uid = db.Column(db.Integer, db.ForeignKey('employees.id'))
 
     def __repr__(self):
         return '<Info: {}>'.format(self.type)
