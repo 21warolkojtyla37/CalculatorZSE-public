@@ -935,7 +935,7 @@ def get_my_data():
     try:
         t = Employee.query.get_or_404(current_user.get_id())
 
-        data = {'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name, 'email': t.email, 'username': t.username, 'profile_photo': t.profile_photo}
+        data = {'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name, 'email': t.email, 'username': t.username, 'profile_photo': t.profile_photo, 'is_admin': t.is_admin}
 
         return jsonify(data)
     except Exception:

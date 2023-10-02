@@ -506,6 +506,7 @@ function createMainPanel() {
                         if (datay.is_admin) is_admin = true; else is_admin = false;
                         $('#profile').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-user"></i>' + datay.first_name + ' ' + datay.last_name + '<div>');
                         $('#profile').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-envelope"></i>' + datay.email + '<div>');
+                        showReportsSite();
                     }
                 });
                 };
@@ -513,7 +514,7 @@ function createMainPanel() {
                 loadProfileSite();
                 
             function showReportsSite() {
-                if (is_admin === false) {
+                if (!is_admin) {
                     $('#report').parent().remove();
                     return;
                     }
@@ -560,7 +561,6 @@ function createMainPanel() {
             
             tip();
             
-            showReportsSite();
             
             function loadStatsSite() {
 
