@@ -3,7 +3,7 @@
 let reload = 'main';
 let reloadId = 0;
 let reloadIdChild = 0;
-let is_admin = false;
+let is_admin;
 
 let categories = parseCategoriesX();
 let points = parsePointsX(categories);
@@ -125,11 +125,11 @@ function createSubsite(title, context1) {
             <table class="table table-striped table-bordered">
               <thead>
                 <tr>
-                  <th width="15%"> Nazwa</th>
+                  <th width="25%"> Nazwa</th>
                   <th width="20%"> Opis </th>
                   <th width="15%"> Wartość </th>
-                  <th width="20%"> Liczba osób które posiadają</th>
-                  <th width="15%"> Czy można dodawać wielokrotnie? </th>
+                  <th width="15%" style="font-size: 1vw !important;"> Liczba osób które posiadają</th>
+                  <th width="10%" style="font-size: 1vw !important;"> Czy można dodawać wielokrotnie? </th>
                   <th width="15%"> Akcje </th>
                 </tr>
               </thead>
@@ -673,6 +673,7 @@ function createPopUp(title, size, position, content) {
 
 
     } else if (content == 'settings') {
+        console.log(is_admin)
         if (is_admin === false) return modalError('Niestety na tą chwilę tylko Administratorzy mogą zmieniać wybrane opcje tej aplikacji.'); //TODO
         middle = `<div id="modwrapper"><div id="modleft">
              <ul class="choices">
@@ -986,7 +987,8 @@ function modalNew(type) {
     } else if (type === 'Role_create') {
         new swal({
             title: '➕ Dodajesz nową Podkategorię',
-            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' + '<label for="boo">Czy można dodać tylko raz?</label>' + '<input id="swal-input4" class="swal2-check" type="checkbox" id="boo"><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label>' + '<select id="items" class="swal2-select" name="items"></select>',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' +
+                '<div style="display: flex; align-items: center; justify-content: center;"><label for="boo">Czy można dodać tylko raz?</label> <input style="margin-left: 1vw;" id="swal-input4" class="swal2-check" type="checkbox" id="boo"></div><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label><br>' + '<select id="items" class="swal2-input" name="items"></select>',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     console.log($('#swal-input4').is(':checked'));
@@ -1066,7 +1068,7 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
     } else if (type === 'Depart_create') {
         new swal({
             title: '➕ Dodajesz nową Klasę',
-            html: '<input id="swal-input1" class="swal2-input" value="Nazwa">' + '<input id="swal-input2" class="swal2-input" value="Opis">',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     resolve([$('#swal-input1').val(), $('#swal-input2').val()])
@@ -1254,21 +1256,21 @@ function showClassCalculator(classId, className) {
           </div>
           <div id="cl_container">
             <div id="cl_students" style="border-right: 1px solid grey; text-align: center">
-              <i class="fa-duotone fa-user-circle fa-2xl"></i>
+              <!--<i class="fa-duotone fa-user-circle fa-2xl"></i>-->
               <div id="cl_header"><h1 class="cl_points_title">Uczniowie</h1></div>
               <div id="cl_studlist" style=" text-align: left;"></div>
               <div id="cl_newstud"><a onclick="modalNew('Object_create')" class="btn btn-default btn-lg"><i class="fa fa-plus"></i>Dodaj nowy</a></div>
             </div>
             <div id="cl_points">
                 <div id="cl_nostud" style="text-align: center">
-                   <i id="cl_nostud_icon" class="fa-duotone fa-circle-exclamation fa-2xl"></i>
+                   <!--<i id="cl_nostud_icon" class="fa-duotone fa-circle-exclamation fa-2xl"></i>-->
                    <h1 class="cl_points_title" id="cl_points_title">Wybierz ucznia</h1>
                    <h3 class="cl_points_subtitle" id="cl_points_subtitle"></h3>
                 </div>
             </div>
             <div id="cl_additional" style="border-left: 1px solid grey">
                 <div style="text-align: center">
-                   <i class="fa-duotone fa-circle-info fa-2xl"></i>
+                   <!--<i class="fa-duotone fa-circle-info fa-2xl"></i>-->
                    <h1 class="cl_points_title">O uczniu</h1>
                       <div id="cl_additional_data"></div>
                 </div>
@@ -1786,7 +1788,7 @@ function change_setting_page(page) {
         <h4>Więcej opcji na razie nie dodaje</h4>`);
     } else if (page === 'account') {
         $('#accounts').addClass('active');
-        $('.modright').html("<h4>Więcej opcji na razie nie dodaje</h4>Zmienić twoje dane może Administrator w swoim panelu.<button onclick='updatepassword(`s`)'>Zmień hasło</button>");
+        $('.modright').html("<h4>Zasugeruj opcje na przyszłość!</h4><br>Zmienić twoje dane może Administrator w swoim panelu.<br><button onclick='updatepassword(`s`)'>Zmień hasło</button>");
     }
 }
 

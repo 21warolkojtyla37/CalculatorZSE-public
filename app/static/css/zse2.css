@@ -161,7 +161,7 @@ p.copyright {
     background-image: none;
     border: 1px solid transparent;
     border-radius: 4px;
-    color: var(--bg-color);
+    color: var(--bg-color-accent);
     background-color: var(--main-color);
 }
 

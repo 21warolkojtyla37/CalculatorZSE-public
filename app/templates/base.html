@@ -12,7 +12,7 @@
     <meta property="og:description"
           content="Liczy rzeczy">
     <meta name="theme-color" content="#1D4AA3">
-    <meta property="og:image" content="{{ url_for('static', filename='img/4.jpg') }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/9.jpg') }}">
     <meta name="twitter:card" content="summary_large_image">
 
 </head>
@@ -31,7 +31,7 @@
 <div id="load"></div>
 
 <script>
-    let imageUrl = '/static/img/5.jpg'
+    let imageUrl = '/static/img/10.jpg'
     if (window.location.href.endsWith("login")) {
         let styles = {
             backgroundColor : "white",
@@ -42,6 +42,7 @@
         };
         $('.center').css( styles );
         $('#back').hide();
+        $('.btn-default').css('color', 'white');
         $('.wrapper').css('background-image', 'url(' + imageUrl + ')');
     }
 </script>

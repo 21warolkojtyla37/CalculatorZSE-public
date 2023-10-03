@@ -4,6 +4,9 @@ from .models import Department, Employee, Role, RoleUser, PermissionUser, Object
 
 from . import db
 
+def version():
+    return '2.0.5 (3 paź 2023)'
+
 
 def check_version():
     setting = Setting.query.filter_by(name='is_dynamic').first()

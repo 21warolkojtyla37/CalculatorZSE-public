@@ -643,6 +643,13 @@ def delete_subcategory():
 @api.route('get_design', methods=['GET', 'POST'])
 def get_design():
     try:
+        v = Setting.query.filter_by(name='version').first()
+        v.value = util.version()
+        db.session.add(v)
+        db.session.commit()
+    except Exception:
+        print('Cannot update version')
+    try:
         name = Setting.query.filter_by(name="app_name").first()
         author = Setting.query.filter_by(name="author").first()
         version = Setting.query.filter_by(name="version").first()
