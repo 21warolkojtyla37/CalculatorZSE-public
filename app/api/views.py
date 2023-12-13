@@ -1,15 +1,18 @@
-from flask import flash, redirect, render_template, url_for, request, jsonify
+from flask import flash, redirect, render_template, url_for, request, jsonify, Response, send_file
 from flask_login import current_user, login_required
 from dataclasses import dataclass
 import os
 import uuid
 import app
 import random
+import csv
+import tempfile
+from io import StringIO, BytesIO
+import zipfile
 
 from . import api
 from .. import util
 from ..models import *
-
 
 @api.route('show_count', methods=['GET', 'POST'])
 @login_required
@@ -83,10 +86,20 @@ def send_bg_photo():
     try:
         db.session.add(n)
         db.session.commit()
+    except Exception as e:
+        util.handleException(e)
+        return 'BAD', 400
+
+    try:
+        s = Setting.query.filter_by(name="is_def_bg").first()
+        s.value = 0
+        db.session.add(s)
+        db.session.commit()
         return 'OK', 200
     except Exception as e:
         util.handleException(e)
         return 'BAD', 400
+
     else:
         return 'BAD', 400
 
@@ -107,6 +120,7 @@ def send_appname():
     except Exception as e:
         util.handleException(e)
         return 'BAD', 400
+
     else:
         return 'BAD', 400
 
@@ -125,10 +139,52 @@ def send_footer_photo():
     try:
         db.session.add(n)
         db.session.commit()
+    except Exception as e:
+        util.handleException(e)
+        return 'BAD', 400
+
+    try:
+        s = Setting.query.filter_by(name="is_def_footer").first()
+        s.value = 0
+        db.session.add(s)
+        db.session.commit()
         return 'OK', 200
     except Exception as e:
         util.handleException(e)
         return 'BAD', 400
+
+    else:
+        return 'BAD', 400
+
+
+@api.route('send_login_photo', methods=['GET', 'POST'])
+@login_required
+def send_login_photo():
+    util.check_admin()
+    x = request.data
+    file_ext = str(uuid.uuid4()) + '.jpg'
+    open(('./app/static/user_content/login_photo/' + file_ext), 'xb').write(x)
+
+    n = Setting.query.filter_by(name="login_photo").first()
+    n.value = 'user_content/login_photo/' + file_ext
+
+    try:
+        db.session.add(n)
+        db.session.commit()
+    except Exception as e:
+        util.handleException(e)
+        return 'BAD', 400
+
+    try:
+        s = Setting.query.filter_by(name="is_def_login").first()
+        s.value = 0
+        db.session.add(s)
+        db.session.commit()
+        return 'OK', 200
+    except Exception as e:
+        util.handleException(e)
+        return 'BAD', 400
+
     else:
         return 'BAD', 400
 
@@ -467,6 +523,8 @@ def get_object_points_for_view2():
     try:
         if request.form['id']:
             x = request.form['id']
+            if not Role.query.count():
+                return 'Dodaj najpiew jakieś role', 420
             r = Role.query.all()
             for t in r:
                 m = RoleUser.query.filter_by(userid=x, roleid=t.id).first()
@@ -656,10 +714,13 @@ def get_design():
         url1 = Setting.query.filter_by(name="bg_photo").first()
         url2 = Setting.query.filter_by(name="footer_photo").first()
         url3 = Setting.query.filter_by(name="login_photo").first()
+        url1d = Setting.query.filter_by(name="is_def_bg").first()
+        url2d = Setting.query.filter_by(name="is_def_footer").first()
+        url3d = Setting.query.filter_by(name="is_def_login").first()
     except Exception:
         return 'ERR', 400
 
-    return jsonify(name.value, author.value, version.value, url1.value, url2.value, url3.value)
+    return jsonify(name.value, author.value, version.value, url1.value, url2.value, url3.value, url1d.value, url2d.value, url3d.value)
 
 
 @api.route('get_value', methods=['GET', 'POST'])
@@ -995,8 +1056,32 @@ def update_password():
         else:
             return 'ERR', 400
 
-        s = Employee.query.filter_by(id=t).first() # TODO bug here
-        s.password = u
+        t.password = u
+        db.session.add(t)
+        db.session.commit()
+
+    except Exception:
+        return 'ERR', 400
+
+    return 'OK', 200
+
+@api.route('move_student', methods=['GET', 'POST'])
+@login_required
+def move_student():
+    util.check_admin()
+    try:
+        if request.form['id']:
+            t = request.form['id']
+        else:
+            return 'ERR', 400
+        if request.form['depart']:
+            v = request.form['depart']
+        else:
+            return 'ERR', 400
+
+        s = Object.query.filter_by(id=t).first()
+        s.department_id = v
+
         db.session.add(s)
         db.session.commit()
 
@@ -1004,3 +1089,78 @@ def update_password():
         return 'ERR', 400
 
     return 'OK', 200
+
+@api.route('download_logs')
+@login_required
+def download_logs():
+    util.check_admin()
+    try:
+        data = Log.query.all()
+
+        # Create a CSV string using StringIO
+        csv_output = StringIO()
+        csv_writer = csv.writer(csv_output)
+
+        # Write header
+        header = [column.name for column in Log.__table__.columns]
+        csv_writer.writerow(header)
+
+        # Write data
+        for row in data:
+            csv_writer.writerow([getattr(row, column) for column in header])
+
+        # Create a Flask Response with CSV data
+        response = Response(csv_output.getvalue(), mimetype='text/csv')
+        response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
+
+        return response
+    except Exception:
+        return 'ERR', 400
+
+
+@api.route('/export_data', methods=['POST'])
+@login_required
+def export_data():
+    util.check_admin()
+    if request.form['type'] == 'zip':
+        try:
+            zip_buffer = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # Adjust the max_size as needed
+
+            with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+                export_table_to_csv(zip_file, 'pracownicy.csv', Employee)
+                export_table_to_csv(zip_file, 'klasy.csv', Department)
+                export_table_to_csv(zip_file, 'uczniowie.csv', Object)
+                export_table_to_csv(zip_file, 'kategorie.csv', RoleParent)
+                export_table_to_csv(zip_file, 'podkategorie.csv', Role)
+                export_table_to_csv(zip_file, 'przypisania.csv', RoleUser)
+                export_table_to_csv(zip_file, 'przypisania_klas.csv', PermissionUser)
+                export_table_to_csv(zip_file, 'notatki.csv', Note)
+                export_table_to_csv(zip_file, 'raporty.csv', Info)
+                export_table_to_csv(zip_file, 'logi.csv', Log)
+                export_table_to_csv(zip_file, 'ustawienia.csv', Setting)
+                export_table_to_csv(zip_file, 'ustawienia_personalne.csv', PersonalSettingOverride)
+
+            zip_buffer.seek(0)
+            return send_file(
+                zip_buffer,
+                mimetype='application/zip',
+                as_attachment=True,
+                download_name='exported_data.zip'
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return "Error occurred while exporting data", 500
+    elif request.form['type'] == 'sql':
+        return send_file('../instance/main.db', as_attachment=True)
+    else:
+        return "Invalid export type", 400
+
+def export_table_to_csv(zip_file, filename, model):
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_csv:
+        csv_writer = csv.writer(temp_csv)
+        header = [column.name for column in model.__table__.columns]
+        csv_writer.writerow(header)
+        for row in model.query.all():
+            csv_writer.writerow([getattr(row, column) for column in header])
+        temp_csv.seek(0)
+        zip_file.write(temp_csv.name, filename)

@@ -165,6 +165,12 @@ p.copyright {
     background-color: var(--main-color);
 }
 
+.centerx {
+    text-align: center;
+    width: 60%;
+    margin: 2% 20%;
+}
+
 .bot {
     margin-bottom: 4vh;
 }
@@ -541,10 +547,10 @@ iframe {
 }
 
 .modal {
-    margin-top: 10vh;
+    transition: all 2s;
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: 10001; /* Sit on top */
     left: 0;
     top: 0;
     width: 100vw; /* Full width */
@@ -581,7 +587,7 @@ iframe {
     padding: 5%;
     color: var(--fg-color);
     background-color: var(--bg-color);
-    min-height: 80%;
+    min-height: 95%;
 }
 
 /* Modal Content/Box */
@@ -631,7 +637,35 @@ iframe {
         border-radius: 0px;
         border: 0px solid var(--main-color);
         line-height: 400%;
-        font-size: 150%;
+        font-size: 65%;
+    }
+    #wrapper {
+        width: 100vw;
+    }
+    #cl_container {
+        flex-direction: column;
+    }
+    #cl_students {
+        width: 100% !important;
+    }
+    #cl_points {
+        width: 100% !important;
+    }
+    #cl_additional {
+        width: 100% !important;
+    }
+    .cl_points_parent {
+        width: 96% !important;
+    }
+    .ff {
+        width: 96% !important;
+    }
+    .ds {
+        font-size: 2vh !important;
+    }
+    .grid {
+      grid-template-columns: repeat(1, 1fr) !important;
+      grid-gap: 50px;
     }
 }
 
@@ -691,6 +725,7 @@ iframe {
 }
 
 .top {
+    transition: all 1s;
     position: fixed;
     top: 0;
     width: 100%;
@@ -1045,6 +1080,8 @@ div#pop-up {
 .active {
     background-color: var(--main-color) !important;
     color: var(--bg-color);
+    --fa-primary-color: var(--bg-color);
+    --fa-secondary-color: var(--bg-color);
 }
 
 .mmc {
@@ -1115,6 +1152,7 @@ var(--bg-color) -space: nowrap;
 
 .swal2-container {
     z-index: 99999999999 !important;
+    font-size: 2vh !important;
 }
 
 table {
@@ -1213,7 +1251,7 @@ th {
     text-align: center;
     cursor: pointer;
     padding: 0px;
-    color: black;
+    color: var(--bg-color);
     height: 33px;
 }
 
@@ -1297,4 +1335,20 @@ input[type="color"] {
 .unrem {
     margin-left: 2vw;
     float: right;
+}
+
+#main-s1 {
+    font-size: 1vw;
+}
+
+#main-s3 {
+    font-size: 1vw;
+}
+
+.ttd {
+    font-size: 1.5vw;
+    background-color: var(--bg-color-accent);
+    color: var(--fg-color);
+    border: 1px solid var(--main-color);
+    border-radius: 0;
 }

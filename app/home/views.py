@@ -13,13 +13,16 @@ from .. import util
 @home.route('/')
 def homepage():
     util.getURL('homepage', 'home')
-    if current_user.is_authenticated:
-        admin = util.check_admin()
-        if admin:
-            return redirect(url_for('home.dashboard'))
+    try:
+        if current_user.is_authenticated:
+            admin = util.check_admin()
+            if admin:
+                return redirect(url_for('home.dashboard'))
+            else:
+                return redirect(url_for('home.calculator'))
         else:
-            return redirect(url_for('home.calculator'))
-    else:
+            return redirect(url_for('auth.login'))
+    except:
         return redirect(url_for('auth.login'))
 
 @home.route('/zx')

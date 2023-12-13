@@ -9,6 +9,8 @@ from ..models import *
 
 @v2.route('/')
 def main():
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
     if not check_version():
         return redirect(url_for('home.dashboard'))
     getURL('main', 'v2')

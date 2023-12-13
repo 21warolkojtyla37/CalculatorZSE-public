@@ -3,6 +3,7 @@
 let reload = 'main';
 let reloadId = 0;
 let reloadIdChild = 0;
+let currentView = 'default'
 let is_admin;
 
 let categories = parseCategoriesX();
@@ -175,155 +176,152 @@ function createSubsite(title, context1) {
 
     $('.body').append(site);
 
-    let dataa = {'name': context1}
-    $.ajax({
-        url: '/api/show_count',
-        dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        data: dataa,
-        success: function (data, textStatus, jQxhr) {
-            if (data == 0) {
-                //TYCH TABELEK TO TUTAJ WOGLE BYC NIE POWINNO
-                $('.table').remove();
-                $('.center').append("Nie ma niczego");
-            } else {
-                if (context1 == 'Employee') {
-                    $.ajax({
-                        url: '/api/list_employees',
-                        dataType: 'text',
-                        type: 'get',
-                        success: function (data, textStatus, jQxhr) {
-                            let dataa = JSON.parse(data);
-                            $.each(dataa, function appendTable(key, value) {
-                                let is_pies = '';
-                                if (value.is_admin === true) {
-                                    is_pies = `👑 Administrator totalny<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
-                                } else {
-                                    is_pies = `Nie moge pobrać tych informacji<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
-                                }
-                                $('.table').append(`<tr>
-                                            <td> <img src="/static/user_content/profile_photo/${value.profile_photo}" width="100px" height="100px"> </td>
-                                          <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'first_name', this.value);" value='${value.first_name}' id='ddsd'> <input oninput="editemp(${value.id}, 'last_name', this.value)" class="undis" type="text" value="${value.last_name}"> </td>
-                                          <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'username', this.value);" value='${value.username}'> </td> 
-                                          <td> <!--${value.permissions}--!> ${is_pies} </td>
-                                          <td> <input class="undis" type="text" oninput="editemp(${value.id}, 'email', this.value);" value='${value.email}'> </td>
-                                          <td id=${value.id}>
-                                                <a class="clickable" onclick="removeDb('employee', ${value.id})">
-                                                <i class="fa fa-trash"></i> Usuń</a><a class="clickable" onclick="resetPassword(${value.id})">
-                                                <i class="fa fa-key-skeleton"></i> Reset hasła</a></td>
-                                          `)
-                            });
-                        },
-                        error: function (jqXhr, textStatus, errorThrown) {
-                            modalError(jqXhr.responseText);
-                        }
-                    });
-                } else if (context1 == 'Department') {
-                    $.ajax({
-                        url: '/api/list_departments',
-                        dataType: 'text',
-                        type: 'get',
-                        success: function (data, textStatus, jQxhr) {
-                            let dataa = JSON.parse(data);
-                            $.each(dataa, function appendTable(key, value) {
-                                $('.table').append(`<tr>
-                                          <td> ${value.name} </td>
-                                          <td> TODO </td>
-                                          <td> TODO </td>
-                                          <td id=${value.id}><a>
-                                          <i class="fa fa-pencil"></i> Edytuj⠀⠀</a>
-                                                <a>
-                                                <i class="fa fa-trash"></i> Usuń</a></td>
-                                          `)
-                            });
-                        },
-                        error: function (jqXhr, textStatus, errorThrown) {
-                            modalError(jqXhr.responseText);
-                        }
-                    });
-                } else if (context1 == 'Role') {
-
-                    let shown = [];
-                    let emojix = '';
-                    let emojiv = 'fa-seal-question';
-
-                    $.each(categories, function appendTable(key, value) {
-                        console.log(key, value)
-                        if (value[3] === undefined || value[3] === null) emojix = `<i class='fa-solid fa-seal-question' onclick='iconpicker(${value[0]});'></i>`; else emojix = `<i class='fa-solid ${value[3]}' onclick='iconpicker(${value[0]});'></i>`;
-                        emojiv = value[3];
-
-                        $('.table').append(`<tr>
-                            <td id="pa_${value[0]}" class="pa" style="background-color: ${value[2]}; opacity: 0.8; color: black;" colspan=6">
-                            ${emojix}
-                            <input type="text" class="undis uncategory" value="${value[1]}" oninput="editprimcat(${value[0]}, 'name', this.value);">
-                            <a style='color: black;' class="unrem" onclick="removeDb('category', '${value[0]}')" ><i class="fa fa-trash"></i> Usuń</a>
-                            <input type="color" class="uncolor" value="${value[2]}" onchange="editprimcat(${value[0]}, 'color', this.value);">
-                            </td>
-                            `)
-                        let found = points.filter(element => element[5] == value[0]);
-                        if (found.length > 0) {
-                            $.each(found, function appendTable(key, value) {
-                                console.log(value)
-                                shown.push(value[0]);
-                                let m;
-                                if (value[4] === true) m = 'checked="true"'; else m = '';
-                                $('.table').append(`<tr data-value="${value[3]}">
-                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat(${value[0]}, 'name', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat(${value[0]}, 'description', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
-                                <td> ${value[6]} </td>
-                                <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
-                                <td id=${value.id}>                                
-                                <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
-                                <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
-                                <i class="fa fa-trash"></i> Usuń</a></td>
-                                `)
-                            });
-
-
-                        } else {
+        if (context1 == 'Employee') {
+            $.ajax({
+                url: '/api/list_employees',
+                dataType: 'text',
+                    type: 'get',
+                    success: function (data, textStatus, jQxhr) {
+                        let dataa = JSON.parse(data);
+                        $.each(dataa, function appendTable(key, value) {
+                            let is_pies = '';
+                            if (value.is_admin === true) {
+                                is_pies = `👑 Administrator totalny<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
+                            } else {
+                                is_pies = `Nie moge pobrać tych informacji<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
+                            }
                             $('.table').append(`<tr>
-                            <td  colspan=5"> Nie ma nic w tej kategorii</td>
-                            `)
-                        }
+                                        <td> <img src="/static/user_content/profile_photo/${value.profile_photo}" width="100px" height="100px"> </td>
+                                      <td> <input class="undis" type="text" placeholder='Podaj imię!!!' oninput="editemp(${value.id}, 'first_name', this.value);" value='${value.first_name}' id='ddsd'> <input oninput="editemp(${value.id}, 'last_name', this.value)" placeholder='Podaj nazwisko!!!' class="undis" type="text" value="${value.last_name}"> </td>
+                                      <td> <input class="undis" type="text" placeholder='Podaj nazwę użytkownika!!!' oninput="editemp(${value.id}, 'username', this.value);" value='${value.username}'> </td> 
+                                      <td> <!--${value.permissions}--!> ${is_pies} </td>
+                                      <td> <input class="undis" type="text" placeholder='Podaj e-mail!!!' oninput="editemp(${value.id}, 'email', this.value);" value='${value.email}'> </td>
+                                      <td id=${value.id}>
+                                            <a class="clickable" onclick="removeDb('employee', ${value.id})">
+                                            <i class="fa fa-trash"></i> Usuń</a><a class="clickable" onclick="resetPassword(${value.id})">
+                                            <i class="fa fa-key-skeleton"></i> Reset hasła</a></td>
+                                      `)
+                        });
+                          if ($('#append tr').length == 0) {
+                              $('.center').append("<h1 style='text-align: center;'>Nie ma niczego</h1>");
+                              $('.table').remove();
+                          }
 
-                    });
+                          $('.table').append('<td colspan="2" style="border:none !important;">Wyświetlam: <span id="shown">' + $('#append tr').length + '</span> z <span id="total">' + $('#append tr').length + '</span></td>');
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            } else if (context1 == 'Department') {
+                $.ajax({
+                    url: '/api/list_departments',
+                    dataType: 'text',
+                    type: 'get',
+                    success: function (data, textStatus, jQxhr) {
+                        let dataa = JSON.parse(data);
+                        $.each(dataa, function appendTable(key, value) {
+                            $('.table').append(`<tr>
+                                      <td> ${value.name} </td>
+                                      <td> TODO </td>
+                                      <td> TODO </td>
+                                      <td id=${value.id}><a>
+                                      <i class="fa fa-pencil"></i> Edytuj⠀⠀</a>
+                                            <a>
+                                            <i class="fa fa-trash"></i> Usuń</a></td>
+                                      `)
+                        });
+                      if ($('#append tr').length == 0) {
+                          $('.center').append("<h1 style='text-align: center;'>Nie ma niczego</h1>");
+                          $('.table').remove();
+                      }
 
-                    let found2 = points.filter(element => !shown.includes(element[0]));
+                      $('.table').append('<td colspan="2" style="border:none !important;">Wyświetlam: <span id="shown">' + $('#append tr').length + '</span> z <span id="total">' + $('#append tr').length + '</span></td>');
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            } else if (context1 == 'Role') {
 
-                    if (found2.length > 0) {
-                        $('.table').append(`<tr>
-                            <td style="background-color: gray; opacity: 0.8; color: black;" colspan=6"> Bez przypisanej kategorii</td>
-                            `)
+                let shown = [];
+                let emojix = '';
+                let emojiv = 'fa-seal-question';
 
-                        $.each(found2, function appendTable(key, value) {
+                $.each(categories, function appendTable(key, value) {
+                    console.log(key, value)
+                    if (value[3] === undefined || value[3] === null) emojix = `<i class='fa-solid fa-seal-question' onclick='iconpicker(${value[0]});'></i>`; else emojix = `<i class='fa-solid ${value[3]}' onclick='iconpicker(${value[0]});'></i>`;
+                    emojiv = value[3];
+
+                    $('.table').append(`<tr>
+                        <td id="pa_${value[0]}" class="pa" style="background-color: ${value[2]}; opacity: 0.8; color: black;" colspan=6">
+                        ${emojix}
+                        <input type="text" placeholder="Podaj nazwę kategorii!!" class="undis uncategory" value="${value[1]}" oninput="editprimcat(${value[0]}, 'name', this.value);">
+                        <a style='color: black;' class="unrem" onclick="removeDb('category', '${value[0]}')" ><i class="fa fa-trash"></i> Usuń</a>
+                        <input type="color" class="uncolor" value="${value[2]}" onchange="editprimcat(${value[0]}, 'color', this.value);">
+                        </td>
+                        `)
+                    let found = points.filter(element => element[5] == value[0]);
+                    if (found.length > 0) {
+                        $.each(found, function appendTable(key, value) {
+                            console.log(value)
+                            shown.push(value[0]);
                             let m;
                             if (value[4] === true) m = 'checked="true"'; else m = '';
-                            shown.push(value[0]);
                             $('.table').append(`<tr data-value="${value[3]}">
-                                <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat(${value[0]}, 'name', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat(${value[0]}, 'description', this.value);"></td>
-                                <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
-                                <td> ${value[6]} </td>
-                                <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
-                                <td id=${value.id}>                                
-                                <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
-                                <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
-                                <i class="fa fa-trash"></i> Usuń</a></td>
-                                `)
+                            <td> <input type="text" class="undis" value="${value[1]}" placeholder="Podaj nazwę!!!" editcat(${value[0]}, 'name', this.value);"></td>
+                            <td> <input type="text" class="undis" value="${value[2]}" placeholder="Podaj opis!!!" oninput="editcat(${value[0]}, 'description', this.value);"></td>
+                            <td> <input type="text" class="undis" value="${value[3]}" placeholder="Podaj wartość!!!" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
+                            <td> ${value[6]} </td>
+                            <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
+                            <td id=${value.id}>                                
+                            <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
+                            <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
+                            <i class="fa fa-trash"></i> Usuń</a></td>
+                            `)
                         });
 
 
+                    } else {
+                        $('.table').append(`<tr>
+                        <td  colspan=6"> Nie ma nic w tej kategorii</td>
+                        `)
                     }
+
+                });
+
+                let found2 = points.filter(element => !shown.includes(element[0]));
+
+                if (found2.length > 0) {
+                    $('.table').append(`<tr>
+                        <td style="background-color: gray; opacity: 0.8; color: black;" colspan=6"> Bez przypisanej kategorii</td>
+                        `)
+
+                    $.each(found2, function appendTable(key, value) {
+                        let m;
+                        if (value[4] === true) m = 'checked="true"'; else m = '';
+                        shown.push(value[0]);
+                        $('.table').append(`<tr data-value="${value[3]}">
+                            <td> <input type="text" class="undis" value="${value[1]}" oninput="editcat(${value[0]}, 'name', this.value);"></td>
+                            <td> <input type="text" class="undis" value="${value[2]}" oninput="editcat(${value[0]}, 'description', this.value);"></td>
+                            <td> <input type="text" class="undis" value="${value[3]}" oninput="editcat(${value[0]}, 'value', this.value);"> </td>
+                            <td> ${value[6]} </td>
+                            <td> <input type="checkbox" ${m} oninput="editcat(${value[0]}, 'multiple', this.checked);"> </td>
+                            <td id=${value.id}>                                
+                            <a class="clickable" onclick="changeParent('${value[0]}')"><i class="fa-sharp fa-regular fa-right-left"></i>Inna kat.</a>
+                            <a class="clickable" onclick="removeDb('subcategory', '${value[0]}')">
+                            <i class="fa fa-trash"></i> Usuń</a></td>
+                            `)
+                    });
+                    }
+
+                  if ($('#append tr').length == 0) {
+                      $('.center').append("<h1 style='text-align: center;'>Nie ma niczego</h1>");
+                      $('.table').remove();
+                  }
+
+                  $('.table').append('<td colspan="2" style="border:none !important;">Wyświetlam: <span id="shown">' + $('#append tr').length + '</span> z <span id="total">' + $('#append tr').length + '</span></td>');
                 }
-                $('.table').append('<td colspan="2" style="border:none !important;">Wyświetlam: <span id="shown">' + data + '</span> z <span id="total">' + data + '</span></td>');
-            }
-        },
-        error: function (jqXhr, textStatus, errorThrown) {
-            modalError(jqXhr.responseText);
-        }
-    });
 }
 
 function createDataPanel() {
@@ -425,13 +423,17 @@ function createDataPanel() {
 
 }
 
-function createMainPanel() {
+async function createMainPanel() {
     $.ajax({
         url: '/api/get_design', dataType: 'text', type: 'get', contentType: 'application/x-www-form-urlencoded'
     }).done(function (result) {
         console.log(result)
         result = JSON.parse(result);
-        $('.intro-header').css("background-image", "url(../static/" + result[3] + ")");
+        if (result[6] == 0) {
+            $('.intro-header').css("background-image", "url(../static/" + result[3] + ")");
+        } else {
+            render_theme()
+        }
         $('.appname').each(function () {
             $(this).text(result[0]);
         });
@@ -481,7 +483,7 @@ function createMainPanel() {
                 <p class="sub"><i class="fa-duotone fa-head-side"></i> P R O F I L</p>
                 <div id="profile"></div>
                 <div id="profile_settings">
-                <button class="btn" onclick="modalNew('ProfilePhoto_create')">Zmień zdjęcie profilowe</button>
+                <button class="btn" onclick="modalNew('MyProfile_open')">Otwórz profil</button>
 
             </div>
             </div>
@@ -614,7 +616,7 @@ function createMainPanel() {
         </div>
     `
 
-    $('.body').append(mainPanel);
+    await $('.body').append(mainPanel);
 }
 
 function createPopUp(title, size, position, content) {
@@ -650,14 +652,34 @@ function createPopUp(title, size, position, content) {
                     <br/>
                   <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
               </div>
-              <div id="form" hidden><form>Oczekuje na wygląd przykładowych danych...</form></div>
+              <div id="form" hidden><form id="duex">Obecnie możliwy jest tylko import
+               z plików PDF które zostały wyeksportowane z Librusa
+               <input type="file" id="tbl" name="tbl" accept="application/pdf" onchange="
+               $('#form').toggle();
+               $('#first').toggle();
+               $('#first').text('Gotowe.');
+               let formData = new FormData();
+               formData.append('file', $('#tbl')[0].files[0]);
+
+               $.ajax({
+                  url: '/calculations/f',
+                  type: 'POST',
+                  data: formData,
+                  async: false,
+                  cache: false,
+                  contentType: false,
+                  enctype: 'multipart/form-data',
+                  processData: false,
+               });
+               "/>
+               </form></div>
         </div>
       <div class="push"></div>
     </div>`
     } else if (content == 'exportLibrus') {
         middle = `<div id="modwrapper"><div id="left"></div>
     
-        <div class="right">
+        <div class="right" style="width: 100%;">
                 <div id="first">
                     <h2>Zapraszam do narzędzia eksportera!</h2>
                     <p>Możesz wyeksportować dane z aplikacji do pliku csv.</p>
@@ -666,7 +688,15 @@ function createPopUp(title, size, position, content) {
                     <br/>
                     <button id="next" onclick="$('#first').toggle();$('#form').toggle();">Dalej</button>
                 </div>
-                <div id="form" hidden><form>Oczekuje na wygląd przykładowych danych...</form></div>
+                <div id="form" hidden style="width: 100%;">
+                    <input id="tiptypex" type="text" value="lib" disabled hidden>
+                    <div class="buttons" style="width: 100%;">
+                    <a class="clickable" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('zip');xexport('zip');">Zip + CSV</a>
+                    <a class="clickable" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('lib');xexport('lib');">Librus</a>
+                    <a class="clickable" id="poz" onclick="$('.disabled').removeClass('disabled').addClass('clickable');$(this).addClass('disabled').removeClass('clickable'); $('#tiptypex').val('sql');xexport('sql');">SQL</a>
+                    </div>
+                    <form><h1>Dla librusa potrzebuje wyglądu danych do eksportu</h1></form>
+                    </div>
         </div>    
         <div class="push"></div>
     </div>`
@@ -750,6 +780,7 @@ function createPopUp(title, size, position, content) {
     let ending = `</div></div></div>`
 
     $('#load').append(start + middle + ending);
+    $('.top').css('margin-top', '-8vh');
 }
 
 function createCalculator(title) {
@@ -785,46 +816,26 @@ function createCalculator(title) {
 
     let dataz = {'name': 'Department'}
     $.ajax({
-        url: '/api/show_count',
+        url: '/api/list_departments',
         dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        data: dataz,
+        type: 'get',
         success: function (data, textStatus, jQxhr) {
-            if (data == 0) {
-                //TYCH TABELEK TO TUTAJ WOGLE BYC NIE POWINNO
-                $('.center').append("Nie ma niczego");
-            } else {
-                $.ajax({
-                    url: '/api/list_departments',
-                    dataType: 'text',
-                    type: 'get',
-                    success: function (data, textStatus, jQxhr) {
-                        let dataz = JSON.parse(data);
-                        console.log(dataz)
-                        $.each(dataz, function appendTable(key, value) {
-                            $('.grid').append(`<div class='clickable cc' data-name='${value[1]}' id='${value[0]}'>
-                                          <div class="classicons"><i onclick="removeDb('class', ${value[0]});" class="fa-thin fa-trash remove"></i>
-                                          <i onclick="editClass(${value[0]});" class="fa-thin fa-pen-to-square modify"></i>  </div>                 
-                                          <i class="fa fa-users"></i><h3> ${value[1]} </h3></div>
+            let dataz = JSON.parse(data);
+            console.log(dataz)
+            $.each(dataz, function appendTable(key, value) {
+                $('.grid').append(`<div class='clickable cc' data-name='${value[1]}' id='${value[0]}'>
+                              <div class="classicons"><i onclick="removeDb('class', ${value[0]});" class="fa-thin fa-trash remove"></i>
+                              <i onclick="editClass(${value[0]});" class="fa-thin fa-pen-to-square modify"></i>  </div>                 
+                              <i class="fa fa-users"></i><h3> ${value[1]} </h3></div>
 
-                                          `)
-                        });
-                    },
-                    error: function (jqXhr, textStatus, errorThrown) {
-                        modalError(jqXhr.responseText);
-                    }
-                });
-
-                $('#howMuch').append('WYświetlam: ' + data + 'z: ' + data + "</div>");
-
-            }
+                              `)
+            });
+            $('#howMuch').append('WYświetlam: ' + $('.cc').length + ' z: ' + $('.cc').length + "</div>");
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
         }
     });
-
 }
 
 function openPopUp() {
@@ -833,6 +844,7 @@ function openPopUp() {
 
 function closePopUp() {
     $('#modal').remove();
+    $('.top').css('margin-top', '0');
 }
 
 function checkNav() {
@@ -893,7 +905,7 @@ function xReload(site_now) {
         }
         reload = site_now;
         checkNav();
-    }, 150);
+    }, 100);
 }
 
 function sendReport(str, type) {
@@ -962,7 +974,10 @@ function modalNew(type) {
         }).then(function (result) {
             if ($('#swal-input4').val() === $('#swal-input5').val()) {
                 let xdata = {
-                    'first_name': result.value[0], 'last_name': result.value[1], 'email': result.value[2], 'password': result.value[3]
+                    'first_name': result.value[0],
+                    'last_name': result.value[1],
+                    'email': result.value[2],
+                    'password': result.value[3]
                 };
                 $.ajax({
                     url: '/api/create_employee',
@@ -987,8 +1002,7 @@ function modalNew(type) {
     } else if (type === 'Role_create') {
         new swal({
             title: '➕ Dodajesz nową Podkategorię',
-            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' +
-                '<div style="display: flex; align-items: center; justify-content: center;"><label for="boo">Czy można dodać tylko raz?</label> <input style="margin-left: 1vw;" id="swal-input4" class="swal2-check" type="checkbox" id="boo"></div><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label><br>' + '<select id="items" class="swal2-input" name="items"></select>',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' + '<div style="display: flex; align-items: center; justify-content: center;"><label for="boo">Czy można dodać tylko raz?</label> <input style="margin-left: 1vw;" id="swal-input4" class="swal2-check" type="checkbox" id="boo"></div><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label><br>' + '<select id="items" class="swal2-input" name="items"></select>',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     console.log($('#swal-input4').is(':checked'));
@@ -1235,6 +1249,119 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
                 }
             });
         }).catch(swal.noop);
+    } else if (type === 'LoginPhoto_create') {
+        new swal({
+            title: 'Zmieniasz zdjęcie w tle logowania',
+            html: '<label htmlFor="file_input">Wybierz zdjęcie:</label>' + '<input type="file" id="file_input" class="swal2-input">',
+            preConfirm: function () {
+                return new Promise(function (resolve) {
+                    resolve([$('#file_input').val()])
+                })
+            },
+            onOpen: function () {
+                $('#file_input').focus();
+            }
+        }).then(function (result) {
+            if (!document.getElementById('file_input').files[0]) {
+                return;
+            }
+            let xdata = document.getElementById('file_input').files[0];
+            $.ajax({
+                url: '/api/send_login_photo',
+                type: 'post',
+                processData: false,
+                contentType: false,
+                cache: false,
+                async: false,
+                data: xdata,
+                success: function (data, textStatus, jQxhr) {
+                    closePopUp();
+                    modalDone();
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    closePopUp();
+                    modalError(jqXhr.responseText);
+                }
+            });
+        }).catch(swal.noop);
+    } else if (type === 'BackgroundPhoto_restore') {
+        new swal({
+            title: 'Czy na pewno chcesz przywrócić zdjęcie w tle?',
+            icon: 'warning',
+            buttons: true,
+            dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                let xdata = {'type': 'is_def_bg', 'value': 1};
+                $.ajax({
+                    url: `/api/set_value`,
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: xdata,
+                    success: function (data, textStatus, jQxhr) {
+                        closePopUp();
+                        modalDone();
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        closePopUp();
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            }
+        });
+    } else if (type === 'FaviconPhoto_restore') {
+        new swal({
+            title: 'Czy na pewno chcesz przywrócić logo?',
+            icon: 'warning',
+            buttons: true,
+            dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                let xdata = {'type': 'is_def_footer', 'value': 1};
+                $.ajax({
+                    url: `/api/set_value`,
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: xdata,
+                    success: function (data, textStatus, jQxhr) {
+                        closePopUp();
+                        modalDone();
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        closePopUp();
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            }
+        });
+    } else if (type === 'LoginPhoto_restore') {
+        new swal({
+            title: 'Czy na pewno chcesz przywrócić tło logowania?',
+            icon: 'warning',
+            buttons: true,
+            dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                let xdata = {'type': 'is_def_login', 'value': 1};
+                $.ajax({
+                    url: `/api/set_value`,
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: xdata,
+                    success: function (data, textStatus, jQxhr) {
+                        closePopUp();
+                        modalDone();
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        closePopUp();
+                        modalError(jqXhr.responseText);
+                    }
+                });
+            }
+        });
     } else {
         new swal("Błąd", "Ta funkcja nie została jeszcze dodana, lub nie działa w pełni", "error", {
             button: "Ok",
@@ -1244,150 +1371,175 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
 }
 
 function showClassCalculator(classId, className) {
-    $('#calcmain').empty();
+    if (currentView === 'default' || currentView === 'filtered') {
+        $('#calcmain').empty();
+        let a;
+        if (currentView == 'default') {
+            a = ['disabled', 'clickable', 'clickable', 'clickable']
+        } else if (currentView == 'filtered') {
+            a = ['clickable', 'disabled', 'clickable', 'clickable']
+        }
 
-    reloadId = classId;
-    reload = 'class';
+        reloadId = classId;
+        reload = 'class';
 
-    let mid_dep = `
-
-          <div class="center">
-          <div class="buttons">
-          </div>
-          <div id="cl_container">
-            <div id="cl_students" style="border-right: 1px solid grey; text-align: center">
-              <!--<i class="fa-duotone fa-user-circle fa-2xl"></i>-->
-              <div id="cl_header"><h1 class="cl_points_title">Uczniowie</h1></div>
-              <div id="cl_studlist" style=" text-align: left;"></div>
-              <div id="cl_newstud"><a onclick="modalNew('Object_create')" class="btn btn-default btn-lg"><i class="fa fa-plus"></i>Dodaj nowy</a></div>
-            </div>
-            <div id="cl_points">
-                <div id="cl_nostud" style="text-align: center">
-                   <!--<i id="cl_nostud_icon" class="fa-duotone fa-circle-exclamation fa-2xl"></i>-->
-                   <h1 class="cl_points_title" id="cl_points_title">Wybierz ucznia</h1>
-                   <h3 class="cl_points_subtitle" id="cl_points_subtitle"></h3>
+        let mid_dep = `
+             <div class="center">
+              <div class="buttons">
+                <a class="${a[0]}" onclick="currentView = 'default'; showClassCalculator(reloadId);">Edycja uczniów</a>
+                <a class="${a[1]}" onclick="currentView = 'filtered'; showClassCalculator(reloadId);">Przeglądanie uczniów</a>
+                <a class="${a[2]}">Przeglądanie według kategorii</a>
+                <a class="${a[3]}">Zarządzanie danymi uczniów</a>
+              </div>
+              <input class="ttd" style="width: 100%; padding: 1%;" 
+              type="text" placeholder="wyszukaj ucznia lub kategorię..." 
+              onkeyup="var value = $(this).val().toLowerCase(); $('#logcount > tr').filter(function() {$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)});">
+              <div id="cl_container">
+                <div id="cl_students" style="border-right: 1px solid grey; text-align: center">
+                  <!--<i class="fa-duotone fa-user-circle fa-2xl"></i>-->
+                  <div id="cl_header"><h1 class="cl_points_title">Uczniowie</h1></div>
+                  <div id="cl_studlist" style=" text-align: left;"></div>
+                  <div id="cl_newstud"><a onclick="modalNew('Object_create')" class="btn btn-default btn-lg"><i class="fa fa-plus"></i>Dodaj nowy</a></div>
                 </div>
-            </div>
-            <div id="cl_additional" style="border-left: 1px solid grey">
-                <div style="text-align: center">
-                   <!--<i class="fa-duotone fa-circle-info fa-2xl"></i>-->
-                   <h1 class="cl_points_title">O uczniu</h1>
-                      <div id="cl_additional_data"></div>
+                <div id="cl_points">
+                    <div id="cl_nostud" style="text-align: center">
+                       <!--<i id="cl_nostud_icon" class="fa-duotone fa-circle-exclamation fa-2xl"></i>-->
+                       <h1 class="cl_points_title" id="cl_points_title">Wybierz ucznia</h1>
+                       <h3 class="cl_points_subtitle" id="cl_points_subtitle"></h3>
+                    </div>
                 </div>
-            </div>
-          </div>
-        `
+                <div id="cl_additional" style="border-left: 1px solid grey">
+                    <div style="text-align: center">
+                       <!--<i class="fa-duotone fa-circle-info fa-2xl"></i>-->
+                       <h1 class="cl_points_title">O uczniu</h1>
+                          <div id="cl_additional_data"></div>
+                    </div>
+                </div>
+              </div>
+            `
 
-    $('#calcmain').append(mid_dep);
+        $('#calcmain').append(mid_dep);
 
-    let xdata = {'id': classId};
+        let xdata = {'id': classId};
 
-    $.ajax({
-        url: '/api/get_depart_objects',
-        dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        data: xdata,
-        success: function (data, textStatus, jQxhr) {
-            let datax = JSON.parse(data);
-            let datay = datax[0];
-            $.each(datay, function appendTable(key, value) {
-                // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                $('#cl_studlist').append(`<div class="studObject" data-value='${value.id}' onclick="selectStud(${value.id}, '${value.first_name}', '${value.last_name}', '${value.comment}', '${className}')"> <span>${value.last_name} ${value.first_name} </span>
-                                          <span> ${value.comment} </span>
-                                          </div>
-                                          `)
-            });
-        },
-        error: function (jqXhr, textStatus, errorThrown) {
-            modalError(jqXhr.responseText);
-        }
-    });
+        $.ajax({
+            url: '/api/get_depart_objects',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            data: xdata,
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                let datay = datax[0];
+                $.each(datay, function appendTable(key, value) {
+                    if (value.comment == null) {
+                        value.comment = '';
+                    }
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                    $('#cl_studlist').append(`<div class="studObject" data-value='${value.id}' onclick="selectStud(${value.id}, '${value.first_name}', '${value.last_name}', '${value.comment}', '${className}')"> <span>${value.last_name} ${value.first_name} </span>
+                                              </div>
+                                              `)
+                });
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        });
 
-    $.ajax({
-        url: '/api/list_role_parents',
-        dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        data: xdata,
-        success: function (data, textStatus, jQxhr) {
-            let datax = JSON.parse(data);
-            $.each(datax, function appendTable(key, value) {
-                // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                if (value.emoji == null) {
-                    value.emoji = ''
-                }
-                $('#cl_points').append(`<div class="cl_points" id="cl_points_p${value.id}" hidden> 
-                                          <span class="cl_points_parent" style="background-color: ${value.color}"><i class="fa-solid ${value.emoji}"></i> ${value.name} </span>
-                                          </div>
-                                          `);
-            });
-        },
-        error: function (jqXhr, textStatus, errorThrown) {
-            modalError(jqXhr.responseText);
-        }
-    });
+        $.ajax({
+            url: '/api/list_role_parents',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            data: xdata,
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                $.each(datax, function appendTable(key, value) {
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                    if (value.emoji == null) {
+                        value.emoji = ''
+                    }
+                    $('#cl_points').append(`<div class="cl_points" id="cl_points_p${value.id}" hidden> 
+                                              <span class="cl_points_parent" style="background-color: ${value.color}"> 
+                                              <i onclick="hidePoints(this)" class="fa-solid fa-arrow-circle-down"></i> <i class="fa-solid ${value.emoji}"></i> ${value.name} </span>
+                                              <div id="clpc"></div></div>
+                                              `);
+                });
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        });
 
-    $.ajax({
-        //TODO: do jasnej cholery nie pokazuje bez kategorii i nie działa
-        url: '/api/list_roles',
-        dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        success: function (data, textStatus, jQxhr) {
-            let datax = JSON.parse(data);
-            $.each(datax, function appendTable(key, value) {
-                // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                if (value.multiple === true) {
-                    $(`#cl_points_p${value.parent_id}`).append(`
-                    <div class="cl_points_child"><span id="cl_points_c${value.id}">${value.name}</span>
-                       <span class="cl_points_counter">
-                       <input type="button" class="cl_points_counter_seg" value="-" onclick="addpoint(${value.id}, -1)"/>
-                       <input type="text" size="25" value="0" class="cl_points_counter_seg cl_points_counter_in"/> <span>razy</span>
-                       <input type="button" class="cl_points_counter_seg" value="+" onclick="addpoint(${value.id}, 1)"/>
-                       </span>
-                   </div>
-                    `);
-                } else {
-                    $(`#cl_points_p${value.parent_id}`).append(`
-                    <div class="cl_points_child"><span id="cl_points_c${value.id}">${value.name}</span>
-                       <span class="cl_points_counter cl_points_one">
-                            <span class="one" onclick="addpoint(${value.id}, 1)">tak</span>
-                       </span>
-                       <span class="cl_points_counter cl_points_zero">
-                            <span class="zero" onclick="addpoint(${value.id}, 0)">nie</span>
-                       </span>
-                   </div>
-                    `);
-                }
+        $.ajax({
+            //TODO: do jasnej cholery nie pokazuje bez kategorii i nie działa
+            url: '/api/list_roles',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                $.each(datax, function appendTable(key, value) {
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                    if (value.multiple === true) {
+                        $(`#cl_points_p${value.parent_id} > #clpc`).append(`
+                        <div class="cl_points_child"><span id="cl_points_c${value.id}">${value.name}</span>
+                           <span class="cl_points_counter">
+                           <input type="button" class="cl_points_counter_seg" value="-" onclick="addpoint(${value.id}, -1)"/>
+                           <input type="text" size="25" value="0" class="cl_points_counter_seg cl_points_counter_in"/> <span>razy</span>
+                           <input type="button" class="cl_points_counter_seg" value="+" onclick="addpoint(${value.id}, 1)"/>
+                           </span>
+                       </div>
+                        `);
+                    } else {
+                        $(`#cl_points_p${value.parent_id} > #clpc`).append(`
+                        <div class="cl_points_child"><span id="cl_points_c${value.id}">${value.name}</span>
+                           <span class="cl_points_counter cl_points_one">
+                                <span class="one" onclick="addpoint(${value.id}, 1)">tak</span>
+                           </span>
+                           <span class="cl_points_counter cl_points_zero">
+                                <span class="zero" onclick="addpoint(${value.id}, 0)">nie</span>
+                           </span>
+                       </div>
+                        `);
+                    }
 
-            });
-        },
-        error: function (jqXhr, textStatus, errorThrown) {
-            modalError(jqXhr.responseText);
-        }
-    });
+                });
+            },
+            error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        });
+    }
 }
 
 
 function selectStud(id, fname, lname, desc, dep) {
-    $(".cl_points").each(function () {
-        $(this).removeAttr('hidden');
-        $(`#cl_points_title`).html(`${fname.charAt(0).toUpperCase() + fname.slice(1)} ${lname.charAt(0).toUpperCase() + lname.slice(1)}`);
+    if ($('#cl_points_title').data('value') === null) {
         $('#cl_points_title').data('value', id);
-        $(`#cl_points_subtitle`).html(`Mam <span id='ser_sum'>???</span> punktów i uczęszczam do klasy ${dep} | ${desc}`);
-        $('#cl_nostud_icon').attr('class', 'fa-duotone fa-pen-circle fa-2xl')
-        $('#cl_additional_data').html(`<div class="ff">
-                <p class="sub"><i class="fa-duotone fa-lightbulb"></i> D A N E</p>
-                <div style="width: 100%;"><input type="text" oninput="modifyobject('first_name', this.value)" value="${fname}"><br><input type="text" oninput="modifyobject('last_name', this.value)" value="${lname}"><br><input type="text" oninput="modifyobject('comment', this.value)" value="${desc}"><br><p class="ds">Zmiany są zapisywane automatycznie</p></div>
-            </div>`)
-        $('#cl_additional_data').append(`<div class="ff">
-                <p class="sub"><i class="fa-duotone fa-lightbulb"></i> N O T Y</p>
-                <div id="notescu"></div>
-                <div style="width: 100%;"><input type="text" id="object-note-input" placeholder="zanotuj coś..."><input type="number" id="object-note-val" placeholder="0"><br><button class="btn" onclick="addobjectnote()">Dodaj</button></div>
-            </div>`)
+        $('#cl_points').append('<h1 style="text-align: center;">Nie masz żadnych kategorii</h1>')
+    }
+    $(".cl_points").each(function () {
+            $(this).removeAttr('hidden');
     });
-    showcurrentpoints();
+    $(`#cl_points_title`).html(`${fname.charAt(0).toUpperCase() + fname.slice(1)} ${lname.charAt(0).toUpperCase() + lname.slice(1)}`);
+    $('#cl_points_title').data('value', id);
+    $(`#cl_points_subtitle`).html(`Mam <span id='ser_sum'>???</span> punktów i uczęszczam do klasy ${dep} | ${desc}`);
+    $('#cl_nostud_icon').attr('class', 'fa-duotone fa-pen-circle fa-2xl')
+    $('#cl_additional_data').html(`<div class="ff">
+            <p class="sub"><i class="fa-duotone fa-lightbulb"></i> D A N E</p>
+            <div style="width: 100%;"><input type="text" oninput="modifyobject('first_name', this.value)" value="${fname}"><br><input type="text" oninput="modifyobject('last_name', this.value)" value="${lname}"><br><input type="text" placeholder="opis" oninput="modifyobject('comment', this.value)" value="${desc}"><br><p class="ds">Zmiany są zapisywane automatycznie</p></div>
+        </div>`)
+    $('#cl_additional_data').append(`<div class="ff">
+            <p class="sub"><i class="fa-duotone fa-lightbulb"></i> N O T Y</p>
+            <div id="notescu"></div>
+            <div style="width: 100%;"><input type="text" id="object-note-input" placeholder="zanotuj coś..."><input type="number" id="object-note-val" placeholder="0"><br><button class="btn" onclick="addobjectnote()">Dodaj</button></div>
+        </div>`)
+    $('#cl_additional_data').append(`<div class="ff">
+           <p class="ds" onclick="removeStudent(${id})"><i class="fa-duotone fa-trash"></i> Usuń ucznia</p>
+           <p class="ds" onclick="moveStudent(${id})"><i class="fa-duotone fa-arrows"></i> Przenieś ucznia</p>
+        </div>`)
+    showcurrentpoints(currentView);
 }
 
 
@@ -1404,12 +1556,17 @@ function exportData(type) {
             success: function (data, textStatus, jQxhr) {
                 let datax = JSON.parse(data);
                 createPopUp('🪪Logi', 'large', 'center', 'empty');
+                $('#popdata').append(`<input class='ttd' 
+                style='width: 96%; padding: 1%; margin: 1%' type="text" placeholder="wyszukaj w logach..."
+                onkeyup="var value = $(this).val().toLowerCase(); $('#logcount > tr').filter(function() {$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)});">
+                <button class='centerx' onclick="download_logs()">Pobierz logi</button>
+                </input>`)
                 openPopUp();
+                $('#popdata').append(`<table id="logcount">`);
                 $.each(datax, function appendTable(key, value) {
-                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                    $('#popdata').append(`<tr>
-                                              <td> ${value} </td>
-                                              `)
+                    $('#logcount').append(`<tr>
+                                              <td>${value}</td>
+                                          </tr>`);
                 });
             },
             error: function (jqXhr, textStatus, errorThrown) {
@@ -1542,7 +1699,7 @@ function editMode() {
                                 });
                             } else {
                                 $('.table').append(`<tr>
-                            <td  colspan=5"> Nie ma nic w tej kategorii</td>
+                            <td  colspan=6"> Nie ma nic w tej kategorii</td>
                             `)
                             }
 
@@ -1773,9 +1930,11 @@ function change_setting_page(page) {
                 <button onclick="change_setting('color', 1, 'appearance')">ciemnobeżowy</button>
                 <button onclick="change_setting('color', 2, 'appearance')">fioletowy</button><br><hr>
                 <p>Wybierz baner na stronie głównej</p>
-                <button onclick="modalNew('BackgroundPhoto_create')">wstaw swój</button><button>przywróć domyślny</button><br><hr>
+                <button onclick="modalNew('BackgroundPhoto_create')">wstaw swój</button> <button onclick="modalNew('BackgroundPhoto_restore')">przywróć domyślny</button><br><hr>
                 <p>Wybierz zdjęcie w stopce i favicon</p>
-                <button onclick="modalNew('FaviconPhoto_create')">wstaw swój</button><button>przywróć domyślny</button><br><hr>`);
+                <button onclick="modalNew('FaviconPhoto_create')">wstaw swój</button> <button onclick="modalNew('FaviconPhoto_restore')">przywróć domyślny</button><br><hr>
+                <p>Wybierz zdjęcie na ekranie logowania</p>
+                <button onclick="modalNew('LoginPhoto_create')">wstaw swój</button> <button onclick="modalNew('LoginPhoto_restore')">przywróć domyślny</button><br><hr>`);
             },
             error: function (jqXhr, textStatus, errorThrown) {
                 modalError(jqXhr.responseText);
@@ -1788,7 +1947,23 @@ function change_setting_page(page) {
         <h4>Więcej opcji na razie nie dodaje</h4>`);
     } else if (page === 'account') {
         $('#accounts').addClass('active');
-        $('.modright').html("<h4>Zasugeruj opcje na przyszłość!</h4><br>Zmienić twoje dane może Administrator w swoim panelu.<br><button onclick='updatepassword(`s`)'>Zmień hasło</button>");
+        $('.modright').html('🥸 Mój Profil');
+        $.ajax({
+                    url: '/api/get_my_data',
+                    dataType: 'text',
+                    type: 'get',
+                    contentType: 'application/x-www-form-urlencoded',
+                    success: function (data, textStatus, jQxhr) {
+                        let datay = JSON.parse(data);
+                        $('.modright').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-user"></i> ' + datay.first_name + ' ' + datay.last_name + '<div>');
+                        $('.modright').append('<div class="saferemove" style="padding: 20px; "><i class="fa-duotone fa-envelope"></i> ' + datay.email + '<div>');
+                        $('.modright').append(
+                            "<div class='saferemove' style='padding: 20px; '><i class='fa-duotone fa-lock-alt'></i> ******** <button onclick='updatepassword(`s`)'>Zmień hasło</button></div>" +
+                            "<button class=\"btn\" onclick=\"modalNew('ProfilePhoto_create')\">Zmień zdjęcie profilowe</button> " +
+                            "<button className=\"btn\" onClick=\"modalNew('BgPhoto_create')\">Zmień zdjęcie w tle</button>" +
+                            "<h6>Administrator może dokonać korekty twoich danych w Panelu.</h6>");
+                    }
+        });
     }
 }
 
@@ -1814,7 +1989,7 @@ function change_setting(type, value, page) {
 }
 
 function render_theme() {
-    let xdata = {'type': 'theme color'};
+    let xdata = {'type': 'theme color is_def_bg is_def_footer is_def_login'};
     $.ajax({
         url: `/api/get_value`,
         dataType: 'text',
@@ -1825,8 +2000,14 @@ function render_theme() {
             let vdata = JSON.parse(data);
             if (vdata[0] == 0) {
                 $("body").attr("style", "--bg-color: rgb(240, 240, 240); --bg-color-accent: rgb(220, 220, 220);--fg-color: rgb(0, 0, 0);");
+                if (vdata[2] == 1) {
+                    $('.intro-header').css("background-image", "url(../static/img/n2.jpg)");
+                }
             } else if (vdata[0] == 1) {
                 $("body").attr("style", "--bg-color: rgb(0, 0, 0); --bg-color-accent: rgb(30, 30, 30);--fg-color: rgb(220, 220, 220);");
+                if (vdata[2] == 1) {
+                    $('.intro-header').css("background-image", "url(../static/img/n1.jpg)");
+                }
             } else {
                 modalError('Błąd strony');
             }
@@ -1881,7 +2062,12 @@ function showonly(type) {
 }
 
 
-function showcurrentpoints() {
+function showcurrentpoints(view = 'default') {
+    $(".cl_points_child").each(function(index, element) {
+        $(element).show();
+
+        $(element).children().show();
+    });
     let sum = 0;
     $('.cl_active').each(function () {
         $(this).removeClass('cl_active');
@@ -1899,13 +2085,18 @@ function showcurrentpoints() {
             for (let i = 0; i < vdata.length; i++) {
                 let x = $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_counter').children('.cl_points_counter_in')
                 if (x.length !== 0) {
-                    console.log(vdata[i][2])
                     x.val(vdata[i][1]);
+                    if (x.val() == 0 && view == 'filtered') {
+                        x.parent().parent().hide();
+                    }
                 } else {
                     if (vdata[i][1] == 1) {
                         $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_one').children('.one').addClass('cl_active');
                     } else {
                         $(`#cl_points_c${vdata[i][0]}`).parent().children('.cl_points_zero').children('.zero').addClass('cl_active');
+                        if (view == 'filtered') {
+                            $(`#cl_points_c${vdata[i][0]}`).parent().hide();
+                        }
                     }
                 }
                 sum = sum + parseInt(vdata[i][2] * vdata[i][1]);
@@ -1954,7 +2145,7 @@ function addpoint(id, value) {
         contentType: 'application/x-www-form-urlencoded',
         data: xdata,
         success: function (data, textStatus, jQxhr) {
-            showcurrentpoints();
+            showcurrentpoints(currentView);
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
@@ -1974,7 +2165,7 @@ function modifyobject(type, value) {
         contentType: 'application/x-www-form-urlencoded',
         data: xdata,
         success: function (data, textStatus, jQxhr) {
-            showcurrentpoints();
+            showcurrentpoints(currentView);
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
@@ -1994,7 +2185,7 @@ function addobjectnote() {
         contentType: 'application/x-www-form-urlencoded',
         data: xdata,
         success: function (data, textStatus, jQxhr) {
-            showcurrentpoints();
+            showcurrentpoints(currentView);
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
@@ -2011,12 +2202,15 @@ function removenote(id) {
         contentType: 'application/x-www-form-urlencoded',
         data: xdata,
         success: function (data, textStatus, jQxhr) {
-            showcurrentpoints();
+            showcurrentpoints(currentView);
         }
     });
 }
 
 function editemp(id, key, value) {
+    if (value == '' || value == null) {
+        value = ' ';
+    }
     console.log('triggered!')
     let xdata = {'id': id, 'key': key, 'value': value};
     $.ajax({
@@ -2038,6 +2232,9 @@ function editprimcat(id, key, value) {
     if (key === 'color') {
         $(`#pa_${id}`).css('background-color', value);
     }
+    if (value == '' || value == null) {
+        value = ' ';
+    }
     let xdata = {'id': id, 'key': key, 'value': value};
     $.ajax({
         url: `/api/update_category`,
@@ -2057,7 +2254,7 @@ function editprimcat(id, key, value) {
 
 function editcat(id, key, value) {
     if (value == '' || value == null) {
-        value = 0;
+        value = ' ';
     }
     let xdata = {'id': id, 'key': key, 'value': value.toString()};
     console.log(xdata)
@@ -2286,7 +2483,8 @@ function resetPassword(id) {
                         data: {id: id, key: 'password', value: $('#swal-input1').val()},
                         success: function (data, textStatus, jQxhr) {
                             modalDone();
-                        }, error: function (jqXhr, textStatus, errorThrown) {
+                        },
+                        error: function (jqXhr, textStatus, errorThrown) {
                             modalError(jqXhr.responseText);
                         }
                     });
@@ -2296,8 +2494,117 @@ function resetPassword(id) {
     });
 }
 
+function removeStudent(id) {
+    $.ajax({
+        url: '/api/remove_student',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: {id: id},
+        success: function (data, textStatus, jQxhr) {
+            modalDone();
+            showClassCalculator(reloadId);
+        },
+        error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
+    })
+
+}
+
+function moveStudent(id) {
+    $.ajax({
+        url: '/api/list_departments',
+        dataType: 'text',
+        type: 'get',
+        contentType: 'application/x-www-form-urlencoded',
+        success: function (data, textStatus, jQxhr) {
+            let vdata = JSON.parse(data);
+            new swal({
+                title: 'Przenieś ucznia',
+                html: '<label for="drop">Do jakiej klasy ma należeć?</label>' + '<select id="xvitems" class="swal2-select" name="items"></select>',
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        resolve([$('#items').find('option:selected').attr('id')])
+                    })
+                },
+                didOpen: function () {
+                    $.each(vdata, function (val, text) {
+                        $('#xvitems').append(`<option value="${text[0]}" id="${text[0]}">${text[1]}</option>`)
+                    });
+                }
+            }).then(function (result) {
+                console.log(id, result.value[0])
+                $.ajax({
+                    url: '/api/move_student',
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: {id: id, depart: $('#xvitems').val(),},
+                    success: function (data, textStatus, jQxhr) {
+                        modalDone();
+                        showClassCalculator(reloadId);
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        modalError(jqXhr.responseText);
+                    }
+                })
+            })
+        }
+    })
+}
+
+function download_logs() {
+    $.ajax({
+        url: '/api/download_logs',
+        type: 'get',
+        success: function (data, textStatus, jQxhr) {
+            modalDone();
+            let blob = new Blob([data], { type: 'text/csv' });
+            let zlink =window.URL.createObjectURL(blob);
+            window.location = zlink
+        }
+    });
+}
+
+
+function xexport(type) {
+    $.ajax({
+        url: '/api/export_data',
+        type: 'post',
+        data: {type: type},
+        success: function (data, textStatus, jQxhr) {
+            modalDone();
+            let blob = new Blob([data], {type: `application/${type}`});
+            let zlink = window.URL.createObjectURL(blob);
+            window.location = zlink
+        }
+    })
+}
+
+function hidePoints(x) {
+    $(x).parent().next().hide();
+    $(x).removeClass('fa-arrow-circle-down');
+    $(x).addClass('fa-arrow-circle-up');
+    $(x).attr('onclick', 'showPoints(this)');
+}
+
+function showPoints(x) {
+    $(x).parent().next().show();
+    $(x).removeClass('fa-arrow-circle-up');
+    $(x).addClass('fa-arrow-circle-down');
+    $(x).attr('onclick', 'hidePoints(this)');
+}
+
+
+
 $(document).on('click', '#popclose', function () {
-    $('#modal').remove();
+    $('.top').css('margin-top', '0vh');
+    $('#modal').css('margin-top', '110vh');
+    setTimeout(function () {
+        $('#modal').remove();
+    }, 2000);
+
 });
 
 $(document).on('click', '.cc', function (e) {
@@ -2321,3 +2628,10 @@ $(document).on('mousemove', '.cat_edit_sub', function (event) {
     x.css('left', event.clientX + 20);
 });
 
+//set timeout for render_theme
+
+$(document).ready(function () {
+    setTimeout(function () {
+        render_theme();
+    }, 100);
+})

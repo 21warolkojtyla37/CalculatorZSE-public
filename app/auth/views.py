@@ -33,8 +33,18 @@ def register():
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('home.dashboard'))
+    try:
+        if current_user.is_authenticated:
+            return redirect(url_for('home.dashboard'))
+    except:
+        print('DB malfunction, app is probably not configured yet or it is broken. Registering is enabled for now, which may by considered as unsafe by some users.')
+        util.migrate()
+        return ("""DB malfunction, app is probably not configured yet or it is broken. 
+                Registering is enabled for now, which may by considered as unsafe by some users. 
+                (or database is so broken that even registration is unavailable)<br>
+                You may try refreshing too, I implemented some kind of auto-repair.<br>
+                <a href='https://github.com/21warolkojtyla37/CalculatorZSE-public/'>Clone the repo maybe?</a>
+                """), 500
     try:
         x = util.get_setting_value("allow_register")
         if int(x) == 1:
@@ -60,7 +70,7 @@ def login():
             util.import_settings([True, 'pl_PL', '/user_content/background_photo/default.png',
                                  '/user_content/footer_photo/default.png', 'Kalkulator ZSE',
                                  '/user_content/background_photo/default.png', 'Mikołaj Patynowski 4I2', util.version(),
-                                 True, 0, 0])
+                                 True, 0, 0, 1, 1, 1])
             flash('Zostałeś zarejestrowany!')
             return redirect(url_for('auth.login'))
 

@@ -12,7 +12,8 @@
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous"></script>
 
-<div class="top">
+<div class="wrapper" id="wrapper">
+    <div class="top">
     <div id="appname" class="top-left"><span class="appname"></span>
         <div id="topcontextleft">
             <!--<li class="mmc"><a href="{{ url_for('admin.list_settings') }}">O aplikacji</a></li>-->
@@ -40,7 +41,6 @@
     <li onclick="xReload('data')" id="datali"><a>Dane</a></li>
     {% endif %}
 </nav>
-<div class="wrapper" id="wrapper">
     <div class="body">
     </div>
     <div class="push"></div>

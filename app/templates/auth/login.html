@@ -20,4 +20,22 @@
     </div>
     {% endif %}
 </div>
+    <script>
+        $.ajax({
+        url: '/api/get_design', dataType: 'text', type: 'get', contentType: 'application/x-www-form-urlencoded'
+    }).done(function (result) {
+        console.log(result)
+        result = JSON.parse(result);
+        $('#wrapper').css("background-image", "url(../static/" + result[5] + ")");
+        $('.title').each(function () {
+            $(this).text(result[0]);
+        });
+        $("link[rel='shortcut']").each(function () {
+            $(this).attr("href", "../static/" + result[4] + "");
+            $(this).attr("src", "../static/" + result[4] + "");
+        });
+
+
+    });
+    </script>
 {% endblock %}

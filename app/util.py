@@ -1,12 +1,17 @@
 from flask import abort, url_for, session
 from flask_login import current_user
 from .models import Department, Employee, Role, RoleUser, PermissionUser, Object, Info, Log, Setting
-
+import subprocess, sys
 from . import db
 
-def version():
-    return '2.0.5 (3 paź 2023)'
+def migrate():
+    result = subprocess.run(['python', 'db', 'init'], stdout=subprocess.PIPE)
+    result = subprocess.run(['python', 'db', 'migrate'], stdout=subprocess.PIPE)
+    result = subprocess.run(['python', 'db', 'upgrade'], stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8')
 
+def version():
+    return '2.2.0 (12 gru 2023)'
 
 def check_version():
     setting = Setting.query.filter_by(name='is_dynamic').first()
@@ -18,7 +23,7 @@ def check_version():
 
 def import_settings(values):
     settings = ['is_dynamic', 'language', 'bg_photo', 'footer_photo', 'app_name', 'login_photo', 'author', 'version',
-                'allow_register', 'theme', 'color']
+                'allow_register', 'theme', 'color', 'is_def_bg', 'is_def_footer', 'is_def_login']
     for c, s in enumerate(settings):
         setting = Setting(name=s, value=values[c])
         db.session.add(setting)

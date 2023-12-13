@@ -6,27 +6,31 @@ przeportować uprawnienia z v1
 [+]lista do zaznaczania pełna z podkategoriami
 [+]uczeń z widocznymi zaletami i wadami
 sortowanie tabelek
-wyszsukiwanie
 [+]kategorie punktów negatywne/pozytywne
-profil
+[+]profil
 [X]wychowawcy -> klasy
 logi kto co dodaje
 pokazywać kto dodał punkt
 [+]noty dla uczniów
 [+]zmiany tła
+[+]edycja naprawić wartość w kategoriach
 
 v2.1:
-zmiana nazwy klas
-wartości dla not
-dokumentacja
+[+]zmiana nazwy klas
+[+]wartości dla not
+[+]dokumentacja
 export danych
-zmiana haseł
+[+]zmiana haseł
+[+]usuwanie ucznia
 
 v2.2:
 bezpieczeństwo
-
-
-
+[+]lista zgłoszeń
+[+]kto wysłał zgłoszenie
+widok: lista punktów i uczniowie
+zawijanie kategorii w kalkulatorze
+widok: tylko zaznaczone punkty
+hasła przy tworzeniu admina xD
 
 
 
