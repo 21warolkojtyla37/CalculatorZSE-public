@@ -1,15 +1,15 @@
 v2:
 
 [+]BUG przy zmienianiu zdjęcia profilowego itp - spróbuj zamknąć alerta
-przeportować uprawnienia z v1
+[+]przeportować uprawnienia z v1
 [+]podkategorie i kategorie punktów
 [+]lista do zaznaczania pełna z podkategoriami
 [+]uczeń z widocznymi zaletami i wadami
-sortowanie tabelek
+[-]sortowanie tabelek
 [+]kategorie punktów negatywne/pozytywne
 [+]profil
-[X]wychowawcy -> klasy
-logi kto co dodaje
+[+]wychowawcy -> klasy
+[+]logi kto co dodaje
 pokazywać kto dodał punkt
 [+]noty dla uczniów
 [+]zmiany tła
@@ -24,18 +24,24 @@ export danych
 [+]usuwanie ucznia
 
 v2.2:
-bezpieczeństwo
+[+]bezpieczeństwo
 [+]lista zgłoszeń
 [+]kto wysłał zgłoszenie
-widok: lista punktów i uczniowie
-zawijanie kategorii w kalkulatorze
-widok: tylko zaznaczone punkty
-hasła przy tworzeniu admina xD
+[+]widok: lista punktów i uczniowie
+[+]Zawijanie kategorii w kalkulatorze
+[+]widok: tylko zaznaczone punkty
+[+]hasła przy tworzeniu admina xD
+[+]gdy usuwam klase usuwać uczniów z klasy
+[+]przy usuwaniu/edytowaniu klasy odświeżać
+[+]wyszukiwarka w uczniach/kategoriach
+anulowanie popupów nie sprawia że sie anulują
 
-
-
-
-
+v2.3:
+ustawienia personalne
+nie-admin może dodać uprawnienie do swojej klasy
+auto wypełnienie emaili
+poprawki w imporcie
+generacje arkuszy
 
 
 

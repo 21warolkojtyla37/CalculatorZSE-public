@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from dataclasses import dataclass
-from app import db, login_manager
+from . import db, login_manager
 
 @dataclass
 class Employee(UserMixin, db.Model):
@@ -13,6 +13,7 @@ class Employee(UserMixin, db.Model):
     profile_photo: str
     is_admin: bool
     __tablename__ = 'employees'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(60), index=True, unique=True)
@@ -52,14 +53,31 @@ class Object(db.Model):
     comment: str
     department_id: int
     role_id: int
+    PESEL: str
+    birth: str
+    address: str
+    phone: str
+    email: str
+    parent_phone: str
+    parent_mail: str
+    birthplace: str
     __tablename__ = 'objects'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(60), index=True)
     last_name = db.Column(db.String(60), index=True)
-    comment = db.Column(db.String(255), index=True)
+    comment = db.Column(db.String(255))
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    PESEL = db.Column(db.String(11), index=True)
+    birth = db.Column(db.DateTime())
+    address = db.Column(db.String(60))
+    phone = db.Column(db.String(12))
+    email = db.Column(db.String(60))
+    parent_phone = db.Column(db.String(12))
+    parent_mail = db.Column(db.String(60))
+    birthplace = db.Column(db.String(30))
     notes = db.relationship("Note", back_populates="user")
 
     def __repr__(self):
@@ -79,6 +97,7 @@ class Department(db.Model):
     master_name: str
 
     __tablename__ = 'departments'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60), unique=True)
@@ -100,6 +119,7 @@ class Role(db.Model):
     multiple: bool
     parent_id: int
     __tablename__ = 'roles'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60), unique=True)
@@ -117,6 +137,7 @@ class Role(db.Model):
 
 class RoleUser(db.Model):
     __tablename__ = 'roleuser_junction'
+    __table_args__ = {'extend_existing': True}
 
     relationid = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
@@ -130,6 +151,7 @@ class RoleUser(db.Model):
 
 class PermissionUser(db.Model):
     __tablename__ = 'permissionuser_junction'
+    __table_args__ = {'extend_existing': True}
 
     relationid = db.Column(db.Integer, primary_key=True)
     userid = db.Column(db.Integer)
@@ -141,6 +163,7 @@ class PermissionUser(db.Model):
 
 class Note(db.Model):
     __tablename__ = 'notes'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(255))
@@ -160,6 +183,7 @@ class Info(db.Model):
     time: str
     uid: str
     __tablename__ = 'infos'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(30))
@@ -173,6 +197,7 @@ class Info(db.Model):
 
 class Log(db.Model):
     __tablename__ = 'logs'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(30))
@@ -191,6 +216,7 @@ class RoleParent(db.Model):
     color: str
     emoji: str
     __tablename__ = 'roles_parent'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60), unique=True)
@@ -205,6 +231,7 @@ class RoleParent(db.Model):
 
 class Setting(db.Model):
     __tablename__ = 'settings'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60), unique=True)
@@ -216,6 +243,7 @@ class Setting(db.Model):
 
 class PersonalSettingOverride(db.Model):
     __tablename__ = 'personalsettings'
+    __table_args__ = {'extend_existing': True}
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60))

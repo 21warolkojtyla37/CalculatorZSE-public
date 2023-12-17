@@ -3,12 +3,16 @@ from flask_login import current_user, login_required
 from dataclasses import dataclass
 import os
 import uuid
-import app
+try:
+    import app
+except:
+    from ... import app
 import random
 import csv
 import tempfile
 from io import StringIO, BytesIO
 import zipfile
+import json
 
 from . import api
 from .. import util
@@ -17,8 +21,6 @@ from ..models import *
 @api.route('show_count', methods=['GET', 'POST'])
 @login_required
 def show_count():
-    # util.check_admin()
-
     try:
         x = request.form['name']
         x = globals()[x]
@@ -61,6 +63,8 @@ def send_profile_photo():
     n = Employee.query.get_or_404(current_user.get_id())
     n.profile_photo = file_ext
 
+    util.LogEx('PPC', current_user.id, 'Zmieniono zdjęcie profilowe')
+
     try:
         db.session.add(n)
         db.session.commit()
@@ -79,6 +83,8 @@ def send_bg_photo():
     x = request.data
     file_ext = str(uuid.uuid4()) + '.jpg'
     open(('./app/static/user_content/background_photo/' + file_ext), 'xb').write(x)
+
+    util.LogEx('BGC', current_user.id, 'Zmieniono zdjęcie tła')
 
     n = Setting.query.filter_by(name="bg_photo").first()
     n.value = 'user_content/background_photo/' + file_ext
@@ -113,6 +119,8 @@ def send_appname():
     n = Setting.query.filter_by(name="app_name").first()
     n.value = x
 
+    util.LogEx('ANC', current_user.id, 'Zmieniono nazwę aplikacji')
+
     try:
         db.session.add(n)
         db.session.commit()
@@ -135,6 +143,8 @@ def send_footer_photo():
 
     n = Setting.query.filter_by(name="footer_photo").first()
     n.value = 'user_content/footer_photo/' + file_ext
+
+    util.LogEx('FPC', current_user.id, 'Zmieniono zdjęcie stopki')
 
     try:
         db.session.add(n)
@@ -168,6 +178,8 @@ def send_login_photo():
     n = Setting.query.filter_by(name="login_photo").first()
     n.value = 'user_content/login_photo/' + file_ext
 
+    util.LogEx('LPC', current_user.id, 'Zmieniono zdjęcie logowania')
+
     try:
         db.session.add(n)
         db.session.commit()
@@ -192,9 +204,33 @@ def send_login_photo():
 @api.route('list_employees', methods=['GET', 'POST'])
 @login_required
 def list_employees():
+    employees = []
     util.check_admin()
 
-    employees = Employee.query.all()
+    for e in Employee.query.all():
+        xe = {}
+        perm = PermissionUser.query.filter_by(userid=e.id).all()
+        if e.is_admin:
+            employees.append(e)
+        else:
+            pms = []
+            for p in perm:
+                dep = Department.query.filter_by(id=p.permissionid).first()
+                if dep:
+                    pms.append({'id': dep.id, 'name': dep.name, 'p': p.relationid})
+                else:
+                    pass
+            if not pms:
+                pms = e.is_admin
+
+            xe['id'] = e.id
+            xe['first_name'] = e.first_name
+            xe['last_name'] = e.last_name
+            xe['email'] = e.email
+            xe['profile_photo'] = e.profile_photo
+            xe['username'] = e.username
+            xe['is_admin'] = pms
+            employees.append(xe)
 
     return jsonify(employees)
 
@@ -203,8 +239,6 @@ def list_employees():
 @login_required
 def list_departments():
     departments = Department.query.all()
-
-    # util.check_admin()
 
     if current_user.is_admin:
         pass
@@ -249,12 +283,13 @@ def list_roles():
 @api.route('get_depart_by_id', methods=['GET', 'POST'])
 @login_required
 def get_depart_by_id():
-    util.check_admin()
 
     if request.form['id']:
         id = request.form['id']
     else:
         return 'ERR', 400
+
+    util.check_admin('Point Group List', request.form['id'])
 
     try:
         department = Department.query.get_or_404(id)
@@ -266,12 +301,13 @@ def get_depart_by_id():
 @api.route('update_depart_by_id', methods=['GET', 'POST'])
 @login_required
 def update_depart_by_id():
-    util.check_admin()
 
     if request.form['id']:
         id = request.form['id']
     else:
         return 'ERR', 400
+
+    util.check_admin('Point Group List', request.form['id'])
 
     try:
         department = Department.query.get_or_404(id)
@@ -336,6 +372,9 @@ def remove_report():
             conn = Info.query.get_or_404(x)
             db.session.delete(conn)
             db.session.commit()
+
+            util.LogEx('RRC', current_user.id, 'Usunięto raport')
+
             return 'OK', 200
     except Exception as e:
         util.handleException(e)
@@ -389,6 +428,8 @@ def create_depart():
 @api.route('create_category', methods=['GET', 'POST'])
 @login_required
 def create_category():
+    util.check_admin()
+
     x = request.form['name']
     y = request.form['desc']
     z = request.form['value']
@@ -404,6 +445,8 @@ def create_category():
 
     cat = Role(name=x, description=y, value=z, multiple=b, parent_id=ab)
 
+    util.LogEx('CRC', current_user.id, 'Utworzono kategorię')
+
     try:
         db.session.add(cat)
         db.session.commit()
@@ -418,10 +461,14 @@ def create_category():
 @api.route('create_category_parent', methods=['GET', 'POST'])
 @login_required
 def create_category_parent():
+    util.check_admin()
+
     x = request.form['name']
     y = request.form['color']
 
     cat = RoleParent(name=x, color=y)
+
+    util.LogEx('CRCP', current_user.id, 'Utworzono kategorię nadrzędną')
 
     try:
         db.session.add(cat)
@@ -450,7 +497,7 @@ def get_depart_objects():
             util.handleException(e)
             return 'ERR', 400
     else:
-        z = PermissionUser.query.filter_by(userid=current_user.id, permissionid=request.form['id'])
+        z = PermissionUser.query.filter_by(userid=current_user.id, permissionid=request.form['id']).first_or_404()
         if z:
             x = request.form['id']
             o = Object.query.filter_by(department_id=x).all()
@@ -462,14 +509,16 @@ def get_depart_objects():
 @api.route('add_depart_object', methods=['GET', 'POST'])
 @login_required
 def add_depart_object():
-    #TODO safety
     try:
         if request.form['id']:
+            util.check_admin('Point Group List', request.form['id'])
             x = request.form['id']
             q = request.form['first_name']
             y = request.form['last_name']
             z = request.form['comment']
             cat = Object(first_name=q, last_name=y, comment=z, department_id=x)
+
+            util.LogEx('AOC', current_user.id, 'Utworzono obiekt')
 
             try:
                 db.session.add(cat)
@@ -490,11 +539,10 @@ def add_depart_object():
 @api.route('get_object_points_for_view', methods=['GET', 'POST'])
 @login_required
 def get_object_points_for_view():
-    util.check_admin()
     points = []
-
     try:
         if request.form['id']:
+            util.check_admin('Point Group List', request.form['id'])
             x = request.form['id']
             o = Object.query.filter_by(id=x).first()
             c = RoleUser.query.filter_by(userid=x).all()
@@ -516,12 +564,11 @@ def get_object_points_for_view():
 @api.route('get_object_points_for_view2', methods=['GET', 'POST'])
 @login_required
 def get_object_points_for_view2():
-    #util.check_admin()
-    #todo safety
     points = []
 
     try:
         if request.form['id']:
+            util.check_admin('Point Group List', request.form['id'])
             x = request.form['id']
             if not Role.query.count():
                 return 'Dodaj najpiew jakieś role', 420
@@ -556,6 +603,9 @@ def get_logs():
     points = []
 
     o = Log.query.all()
+
+    util.LogEx('GLC', current_user.id, 'Wyświetlono logi')
+
     for x in o:
         points.append(x.comment)
 
@@ -566,6 +616,8 @@ def get_logs():
 @login_required
 def remove_logs():
     util.check_admin()
+
+    util.LogEx('RLC', current_user.id, 'Usunięto logi')
 
     db.session.query(Log).delete()
     db.session.commit()
@@ -579,6 +631,8 @@ def get_rapports():
     util.check_admin()
     points = []
 
+    util.LogEx('GRC', current_user.id, 'Wyświetlono raporty')
+
     o = Info.query.all()
 
     return jsonify(o)
@@ -588,6 +642,8 @@ def get_rapports():
 @login_required
 def remove_rapports():
     util.check_admin()
+
+    util.LogEx('RRC', current_user.id, 'Usunięto raporty')
 
     db.session.query(Info).delete()
     db.session.commit()
@@ -604,6 +660,8 @@ def delete_user():
         id = request.form['id']
     else:
         return 'ERR', 400
+
+    util.LogEx('RUC', current_user.id, 'Usunięto użytkownika')
 
     if int(id) == int(current_user.id):
         return 'Nie można usuwać samego siebie', 400
@@ -628,6 +686,8 @@ def delete_category():
     else:
         return 'Błędne zapytanie', 400
 
+    util.LogEx('RCC', current_user.id, 'Usunięto kategorię')
+
     try:
         category = RoleParent.query.get_or_404(id)
         db.session.delete(category)
@@ -641,17 +701,30 @@ def delete_category():
 @api.route('remove_class', methods=['GET', 'POST'])
 @login_required
 def delete_class():
-    util.check_admin()
+    util.check_admin('Point Group List', request.form['id'])
 
     if request.form['id']:
         id = request.form['id']
     else:
         return 'Błędne zapytanie', 400
 
+    util.LogEx('RDC', current_user.id, 'Usunięto klasę')
+
+    objects_to_delete = Object.query.filter_by(department_id=id).all()
+    for obj in objects_to_delete:
+        db.session.delete(obj)
+
+    db.session.commit()
+
     try:
         category = Department.query.get_or_404(id)
         db.session.delete(category)
+        objects_to_delete = Object.query.filter_by(department_id=id).all()
+        for obj in objects_to_delete:
+            db.session.delete(obj)
+
         db.session.commit()
+
     except Exception:
         return 'Wystąpił jakiś błąd po drodze', 400
 
@@ -661,12 +734,14 @@ def delete_class():
 @api.route('remove_student', methods=['GET', 'POST'])
 @login_required
 def delete_student():
-    util.check_admin()
+    util.check_admin('Point Group List', request.form['id'])
 
     if request.form['id']:
         id = request.form['id']
     else:
         return 'Błędne zapytanie', 400
+
+    util.LogEx('RSC', current_user.id, 'Usunięto obiekt')
 
     try:
         category = Object.query.get_or_404(id)
@@ -725,6 +800,7 @@ def get_design():
 
 @api.route('get_value', methods=['GET', 'POST'])
 def get_value():
+    #TODO: personals
     try:
         returned = []
         if request.form['type']:
@@ -743,8 +819,6 @@ def get_value():
 @api.route('add_point', methods=['GET', 'POST'])
 @login_required
 def add_point():
-    #todo safety
-    #util.check_admin()
     try:
         if request.form['value']:
             v = request.form['value']
@@ -761,24 +835,27 @@ def add_point():
             return 'ERR', 400
     except Exception:
         return 'ERR', 400
-    # TODO make it search for count and find who added which points
     try:
         p = RoleUser.query.filter_by(userid=t, roleid=i).first()
+        u = Object.query.filter_by(id=t).first()
+        x = util.check_admin('Point Group List', u.department_id)
         if p:
             r = Role.query.filter_by(id=i).first()
             if r.multiple:
                 p.value = p.value + v
+                p.addedby = current_user.id
             else:
                 if v == 0 or v == 1:
                     p.value = v
+                    p.addedby = current_user.id
             db.session.commit()
         else:
             r = Role.query.filter_by(id=i).first()
             if r.multiple:
-                p = RoleUser(userid=t, roleid=i, value=v)
+                p = RoleUser(userid=t, roleid=i, value=v, addedby=current_user.id)
             else:
                 if v == 0 or v == 1:
-                    p = RoleUser(userid=t, roleid=i, value=v)
+                    p = RoleUser(userid=t, roleid=i, value=v, addedby=current_user.id)
             db.session.add(p)
             db.session.commit()
     except Exception as e:
@@ -791,21 +868,24 @@ def add_point():
 @api.route('set_value', methods=['GET', 'POST'])
 @login_required
 def set_value():
-    util.check_admin()
     try:
-        if request.form['type']:
-            t = request.form['type']
-        else:
-            return 'ERR', 400
-        if request.form['value']:
-            v = request.form['value']
-        else:
-            return 'ERR', 400
+        if util.check_admin():
+            if request.form['type']:
+                t = request.form['type']
+            else:
+                return 'ERR', 400
+            if request.form['value']:
+                v = request.form['value']
+            else:
+                return 'ERR', 400
 
-        s = Setting.query.filter_by(name=t).first()
-        s.value = v
-        db.session.add(s)
-        db.session.commit()
+            s = Setting.query.filter_by(name=t).first()
+            s.value = v
+            db.session.add(s)
+            db.session.commit()
+        else:
+            #TODO: personals
+            return 'ERR', 400
 
     except Exception:
         return 'ERR', 400
@@ -831,6 +911,8 @@ def update_object():
             return 'ERR', 400
 
         s = Object.query.filter_by(id=t).first()
+        util.check_admin('Point Group List', s.department_id)
+        util.LogEx('UOC', current_user.id, 'Zmieniono obiekt')
         setattr(s, u, v)
 
         db.session.add(s)
@@ -862,6 +944,8 @@ def update_employee():
 
         s = Employee.query.filter_by(id=t).first()
         setattr(s, u, v)
+
+        util.LogEx('UEC', current_user.id, 'Zmieniono użytkownika')
 
         db.session.add(s)
         db.session.commit()
@@ -897,6 +981,10 @@ def add_object_note():
         n.body = u
         n.user_id = t
 
+        o = Object.query.filter_by(id=t).first()
+        util.check_admin('Point Group List', o.department_id)
+        util.LogEx('AONC', current_user.id, 'Dodano notatkę')
+
         db.session.add(n)
         db.session.commit()
         return 'OK', 200
@@ -914,6 +1002,9 @@ def remove_object_note():
             return 'ERR', 400
 
         n = Note.query.filter_by(id=t).first()
+        o = Object.query.filter_by(id=n.user_id).first()
+        util.check_admin('Point Group List', o.department_id)
+        util.LogEx('RONC', current_user.id, 'Usunięto notatkę')
 
         db.session.delete(n)
         db.session.commit()
@@ -932,6 +1023,8 @@ def get_object_notes():
             return 'ERR', 400
 
         n = Note.query.filter_by(user_id=t).all()
+        o = Object.query.filter_by(id=t).first()
+        util.check_admin('Point Group List', o.department_id)
         notes = []
         for x in n:
             note = []
@@ -966,6 +1059,8 @@ def update_category():
         s = RoleParent.query.filter_by(id=t).first()
         setattr(s, u, v)
 
+        util.LogEx('UCC', current_user.id, 'Zmieniono kategorię')
+
         db.session.add(s)
         db.session.commit()
 
@@ -982,11 +1077,14 @@ def create_employee():
         first_name = request.form.get('first_name', '')
         last_name = request.form.get('last_name', '')
         email = request.form.get('email', '')
-        password = request.form.get('password', '12PassToChange#@$%*')
+        password = request.form.get('password', '')
         username = request.form.get('username', f'{first_name[:3]}{last_name[:3]}{random.randint(10, 90)}')
         is_admin = bool(request.form.get('is_admin', False))
 
-        e = Employee(first_name=first_name, last_name=last_name, email=email, password=password, username=username, is_admin=is_admin)
+        e = Employee(first_name=first_name, last_name=last_name, email=email, username=username, is_admin=is_admin)
+        #TODO: hide it
+        util.LogEx('CEC', current_user.id, f'Utworzono użytkownika {password}')
+        e.password = password
 
         db.session.add(e)
         db.session.commit()
@@ -1056,6 +1154,8 @@ def update_password():
         else:
             return 'ERR', 400
 
+        util.LogEx('UPC', current_user.id, 'Zmieniono hasło')
+
         t.password = u
         db.session.add(t)
         db.session.commit()
@@ -1109,6 +1209,8 @@ def download_logs():
         for row in data:
             csv_writer.writerow([getattr(row, column) for column in header])
 
+        util.LogEx('DLC', current_user.id, 'Pobrano logi')
+
         # Create a Flask Response with CSV data
         response = Response(csv_output.getvalue(), mimetype='text/csv')
         response.headers['Content-Disposition'] = 'attachment; filename=data.csv'
@@ -1117,6 +1219,31 @@ def download_logs():
     except Exception:
         return 'ERR', 400
 
+
+@api.route('list_with_category_in_class', methods=['GET', 'POST'])
+@login_required
+def list_with_category_in_class():
+    if request.form['class_id']:
+        l = request.form['class_id']
+    else:
+        return 'ERR', 400
+
+    util.check_admin('Point Group List', request.form['class_id'])
+
+    if request.form['role_id']:
+        t = request.form['role_id']
+    else:
+        return 'ERR', 400
+
+    data = RoleUser.query.filter_by(roleid=t).all()
+    objects = Object.query.filter_by(department_id=l).all()
+    res_objects = []
+    for x in objects:
+        for y in data:
+            if x.id == y.userid:
+                res_objects.append([x.id, x.first_name, x.last_name, y.value])
+
+    return jsonify(res_objects)
 
 @api.route('/export_data', methods=['POST'])
 @login_required
@@ -1164,3 +1291,74 @@ def export_table_to_csv(zip_file, filename, model):
             csv_writer.writerow([getattr(row, column) for column in header])
         temp_csv.seek(0)
         zip_file.write(temp_csv.name, filename)
+
+
+@api.route('add_permission', methods=['GET', 'POST'])
+@login_required
+def add_permission():
+    util.check_admin()
+    try:
+        if request.form['id']:
+            t = request.form['id']
+        else:
+            return 'ERR', 400
+        if request.form['user']:
+            u = request.form['user']
+        else:
+            return 'ERR', 400
+
+        s = PermissionUser.query.filter_by(userid=u, permissionid=t).first()
+        if not s:
+            s = PermissionUser(userid=u, permissionid=t)
+            db.session.add(s)
+            db.session.commit()
+
+        return 'OK', 200
+    except Exception:
+        return 'ERR', 400
+
+@api.route('remove_permission', methods=['GET', 'POST'])
+@login_required
+def remove_permission():
+    util.check_admin()
+    try:
+        if request.form['id']:
+            t = request.form['id']
+        else:
+            return 'ERR', 400
+
+        s = PermissionUser.query.filter_by(relationid=t).first()
+        if s:
+            db.session.delete(s)
+            db.session.commit()
+
+        return 'OK', 200
+    except Exception:
+        return 'ERR', 400
+
+
+@api.route('admin_switch', methods=['GET', 'POST'])
+@login_required
+def admin_switch():
+    util.check_admin()
+    try:
+        if request.form['id']:
+            t = request.form['id']
+        else:
+            return 'ERR', 400
+
+        util.LogEx('ASC', current_user.id, f'Zmieniono uprawnienia dla ID {id}')
+
+        s = Employee.query.filter_by(id=t).first()
+        if s:
+            if s.is_admin:
+                s.is_admin = False
+            else:
+                s.is_admin = True
+            db.session.add(s)
+            db.session.commit()
+
+        return 'OK', 200
+    except Exception:
+        return 'ERR', 400
+

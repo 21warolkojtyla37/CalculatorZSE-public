@@ -3,7 +3,7 @@
 <head>
     <title>{{ title }} | Kalkulator ZSE</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/zse2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/zse.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <meta property="og:type" content="website">
@@ -12,7 +12,7 @@
     <meta property="og:description"
           content="Liczy rzeczy">
     <meta name="theme-color" content="#1D4AA3">
-    <meta property="og:image" content="{{ url_for('static', filename='img/9.jpg') }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/4.jpg') }}">
     <meta name="twitter:card" content="summary_large_image">
 
 </head>
@@ -20,32 +20,48 @@
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
-<div class="wrapper" id="wrapper">
-    <button id='back' onclick="javascript:window.history.back();">Wróć</button>
+<nav id="bestSidenav" class="sidenav" role="navigation">
+    {% if current_user.is_authenticated %}
+        <li><a><i class="fa fa-user"></i> Dzień dobry, {{ current_user.username }}!</a></li>
+    {% else %}
+        <li><a href="{{ url_for('home.homepage') }}">Kalkulator</a></li>
+    {% endif %}
+    {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('home.dashboard') }}">Panel</a></li>
+        {% if current_user.is_admin %}
+            <li><a href="{{ url_for('admin.list_users') }}">Administratorzy</a></li>
+            <li><a href="{{ url_for('admin.list_departments') }}">Oddziały</a></li>
+            <li><a href="{{ url_for('admin.list_roles') }}">Kategorie</a></li>
+            <li><a href="{{ url_for('admin.list_errors') }}">Zgłoszenia</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('admin.list_employees') }}">Osoby</a></li>
+        <li><a href="{{ url_for('admin.list_points') }}">Kalkulator</a></li>
+        <li><a href="{{ url_for('magic.homepage') }}">Arkusze</a></li>
+        <li><a href="{{ url_for('admin.list_settings') }}">Ustawienia</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Wyloguj się</a></li>
+    {% else %}
+        <li><a href="{{ url_for('home.homepage') }}">Strona główna</a></li>
+        <li><a href="{{ url_for('auth.register') }}">Rejestracja</a></li>
+        <li><a href="{{ url_for('auth.login') }}">Logowanie</a></li>
+    {% endif %}
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    </div>
+    </div>
+</nav>
+<div class="wrapper" id="wrapper" onload="open();">
+    <div id="stats" onclick="openNav();">
+        <i class="fa-regular fa-navicon" style="margin-right: 5px;"></i><span>Menu</span><i
+            style="margin-left: 15px; margin-right: 5px;" class="fa-regular fa-calendar"></i><span id="date"></span><i
+            style="margin-left: 15px; margin-right: 5px;" class="fa-regular fa-clock"></i><span id="time"></span>
+    </div>
     {% block body %}
     {% endblock %}
     <div class="push"></div>
-
 </div>
 <div id="load"></div>
 
-<script>
-    let imageUrl = '/static/img/10.jpg'
-    if (window.location.href.endsWith("login")) {
-        let styles = {
-            backgroundColor : "white",
-            fontWeight: "",
-            padding: "20px",
-            borderRadius: "20px",
-            boxShadow: "0px 0px 25px black"
-        };
-        $('.center').css( styles );
-        $('#back').hide();
-        $('.btn-default').css('color', 'white');
-        $('.wrapper').css('background-image', 'url(' + imageUrl + ')');
-    }
-</script>
+<script src="{{ url_for('static', filename='js/lbar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/rnd.js') }}"></script>
 
 </body>
 </html>

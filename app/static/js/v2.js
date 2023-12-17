@@ -2,6 +2,7 @@
 
 let reload = 'main';
 let reloadId = 0;
+let reloadName = '';
 let reloadIdChild = 0;
 let currentView = 'default'
 let is_admin;
@@ -9,6 +10,7 @@ let is_admin;
 let categories = parseCategoriesX();
 let points = parsePointsX(categories);
 
+console.log('init')
 
 function parseCategoriesX() {
     let cat = [];
@@ -186,9 +188,20 @@ function createSubsite(title, context1) {
                         $.each(dataa, function appendTable(key, value) {
                             let is_pies = '';
                             if (value.is_admin === true) {
-                                is_pies = `👑 Administrator totalny<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
+                                is_pies = `👑 Administrator totalny<br><a onclick="adminSwitch(${value.id})"><i class="fa-solid fa-user"></i> Zmień na zwykłego</a>`;
+                            } else if (Array.isArray(value.is_admin)) {
+                                is_pies = '👥 Użytkownik z uprawnieniami do: <br>';
+                                for (let i = 0; i < value.is_admin.length; i++) {
+                                    is_pies += value.is_admin[i].name + `<a onclick="removePermission(${value.is_admin[i].p})"> <i class="fa-solid fa-trash"></i> Usuń</a><br>`;
+                                }
+                                is_pies += `
+                                <a onclick="addPerm(${value.id})"> <i class="fa-solid fa-plus"></i> Dodaj uprawnienie</a><br>
+                                <a onclick="adminSwitch(${value.id})"> <i class="fa-solid fa-crown"></i> Zmień na admina</a>`;
                             } else {
-                                is_pies = `Nie moge pobrać tych informacji<br><a href="/admin/u&${value.id}">Zarządzaj uprawnieniami</a>`;
+                                is_pies = `👤 Użytkownik bez dostępu do niczego!`;
+                                is_pies += `<br>
+                                <a onclick="addPerm(${value.id})"> <i class="fa-solid fa-plus"></i> Dodaj uprawnienie</a><br>
+                                <a onclick="adminSwitch(${value.id})"> <i class="fa-solid fa-crown"></i> Zmień na admina</a>`;
                             }
                             $('.table').append(`<tr>
                                         <td> <img src="/static/user_content/profile_photo/${value.profile_photo}" width="100px" height="100px"> </td>
@@ -717,7 +730,7 @@ function createPopUp(title, size, position, content) {
         </div>
     </div>`
     } else if (content == 'docs') {
-        middle = `<div class="help-header">
+        middle = `<div class="help-header" style="margin: -9.5vh -20vw;">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12">
@@ -808,11 +821,14 @@ function createCalculator(title) {
 
     let ending = `</div></div></div></div>`
 
-
     let site = start + titleblock + mid + ending
 
 
     $('.body').append(site);
+
+    if (is_admin === false) {
+        $('#calcDepart').append(`<div class="clickable" onclick="createPopUp('📲Import z Librusa', 'large', 'center', 'importLibrus');openPopUp();"><i class="fa fa-table-cells"></i><h3>Zaimportuj z Librusa</h3></div>`)
+    }
 
     let dataz = {'name': 'Department'}
     $.ajax({
@@ -963,7 +979,7 @@ function modalNew(type) {
             html: '<input id="swal-input1" class="swal2-input" placeholder="Imię">' + '<input id="swal-input2" class="swal2-input" placeholder="Nazwisko">' + '<input id="swal-input3" class="swal2-input" placeholder="E-mail">' + '<input id="swal-input4" class="swal2-input" placeholder="Hasło">' + '<input id="swal-input5" class="swal2-input" placeholder="Powtórz hasło">',
             preConfirm: function () {
                 return new Promise(function (resolve) {
-                    resolve([$('#swal-input1').val(), $('#swal-input2').val(), $('#swal-input3').val()
+                    resolve([$('#swal-input1').val(), $('#swal-input2').val(), $('#swal-input3').val(), $('#swal-input4').val()
 
                     ])
                 })
@@ -1371,29 +1387,33 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
 }
 
 function showClassCalculator(classId, className) {
+    $('#calcmain').empty();
+    let a;
+    if (currentView == 'default') {
+        a = ['disabled', 'clickable', 'clickable', 'clickable']
+    } else if (currentView == 'filtered') {
+        a = ['clickable', 'disabled', 'clickable', 'clickable']
+    } else if (currentView == 'browsing') {
+        a = ['clickable', 'clickable', 'disabled', 'clickable']
+    } else if (currentView == 'managing') {
+        a = ['clickable', 'clickable', 'clickable', 'disabled']
+    }
+    $('#calcmain').append(`<div class="center">
+        <div class="buttons">
+        <a class="${a[0]}" onclick="currentView = 'default'; showClassCalculator(reloadId);">Edycja uczniów</a>
+        <a class="${a[1]}" onclick="currentView = 'filtered'; showClassCalculator(reloadId);">Przeglądanie uczniów</a>
+        <a class="${a[2]}" onclick="currentView = 'browsing'; showClassCalculator(reloadId);">Przeglądanie według kategorii</a>
+        <a class="${a[3]}" onclick="currentView = 'managing'; showClassCalculator(reloadId);">Zarządzanie danymi uczniów</a></div></div>
+    `)
+
+    reloadId = classId;
+    reload = 'class';
+    reloadName = className;
     if (currentView === 'default' || currentView === 'filtered') {
-        $('#calcmain').empty();
-        let a;
-        if (currentView == 'default') {
-            a = ['disabled', 'clickable', 'clickable', 'clickable']
-        } else if (currentView == 'filtered') {
-            a = ['clickable', 'disabled', 'clickable', 'clickable']
-        }
-
-        reloadId = classId;
-        reload = 'class';
-
         let mid_dep = `
-             <div class="center">
-              <div class="buttons">
-                <a class="${a[0]}" onclick="currentView = 'default'; showClassCalculator(reloadId);">Edycja uczniów</a>
-                <a class="${a[1]}" onclick="currentView = 'filtered'; showClassCalculator(reloadId);">Przeglądanie uczniów</a>
-                <a class="${a[2]}">Przeglądanie według kategorii</a>
-                <a class="${a[3]}">Zarządzanie danymi uczniów</a>
-              </div>
               <input class="ttd" style="width: 100%; padding: 1%;" 
               type="text" placeholder="wyszukaj ucznia lub kategorię..." 
-              onkeyup="var value = $(this).val().toLowerCase(); $('#logcount > tr').filter(function() {$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)});">
+              onkeyup="calSearcher(this)">
               <div id="cl_container">
                 <div id="cl_students" style="border-right: 1px solid grey; text-align: center">
                   <!--<i class="fa-duotone fa-user-circle fa-2xl"></i>-->
@@ -1415,10 +1435,9 @@ function showClassCalculator(classId, className) {
                           <div id="cl_additional_data"></div>
                     </div>
                 </div>
-              </div>
             `
 
-        $('#calcmain').append(mid_dep);
+        $('.center').append(mid_dep);
 
         let xdata = {'id': classId};
 
@@ -1510,14 +1529,152 @@ function showClassCalculator(classId, className) {
                 modalError(jqXhr.responseText);
             }
         });
+    } else if (currentView == 'managing') {
+            $('.center').append(`
+                    <table class="table table-striped table-bordered smol">
+                      <thead>
+                        <tr>
+                          <th width="2%"> Nr </th>
+                          <th width="5%"> Imię/Nazwisko</th>
+                          <th width="9%"> PESEL</th>
+                          <th width="8%"> Data ur. </th>
+                          <th width="20%"> Adres </th>
+                          <th width="11%"> Nr. tel. </th>
+                          <th width="10%"> E-mail </th>
+                          <th width="9%"> Punkty/Noty </th>
+                          <th width="9%"> Urodził się w </th>
+                          <th width="9%"> Nr. tel rodzica </th>
+                          <th width="9%"> E-mail rodzica </th>
+                          <th width="9%"> Akcja </th>
+                        </tr>
+                      </thead>
+                      <tbody id="append">
+        
+                      </tbody>
+                    </table> <div style="text-align: center" onclick="modalNew('Object_create')">
+                        <a class="btn btn-default btn-lg">
+                            <i class="fa fa-plus"></i>
+                            Dodaj nowego
+                        </a>
+                      </div>`);
+            let xdata = {'id': classId};
+
+            $.ajax({
+                url: '/api/get_depart_objects',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/x-www-form-urlencoded',
+                data: xdata,
+                success: function (data, textStatus, jQxhr) {
+                    let datax = JSON.parse(data);
+                    let datay = datax[0];
+                    let id = 1;
+                    datay = noNull(datay);
+                    $.each(datay, function appendTable(key, value) {
+                        if (value.comment == null) {
+                            value.comment = '';
+                        }
+                        if (value.address.includes(';')) {
+                            value.address = value.address.replace(';', '&#13;&#10;');
+                        }
+                        if (value.birth) {
+                            value.birth = new Date(value.birth);
+                            value.birth = ("0" + value.birth.getUTCDate()).slice(-2) + "/" +
+                            ("0" + (value.birth.getUTCMonth() + 1)).slice(-2) + "/" +
+                            value.birth.getUTCFullYear().toString().slice(-2);
+                        }
+                        // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                        $('#append').append(`<tr>
+                                              <td>${id}</td>
+                                              <td> <input oninput="modifyobject('first_name', this.value, ${value.id})" value="${value.first_name}" class="undis" placeholder="brak imienia">
+                                                   <input oninput="modifyobject('last_name', this.value, ${value.id})" value="${value.last_name}" class="undis" placeholder="brak nazwiska"></td>
+                                              <td> <input oninput="modifyobject('PESEL', this.value, ${value.id})" value="${value.PESEL}" class="undis" placeholder="b.d."></td>
+                                              <td> <input oninput="modifyobject('birth', this.value, ${value.id})" value="${value.birth}" class="undis" placeholder="b.d."></td>
+                                              <td> <textarea oninput="modifyobject('address', this.value, ${value.id})" class="undis" placeholder="b.d.">${value.address}</textarea></td>
+                                              <td> <input oninput="modifyobject('phone', this.value, ${value.id})" value="${value.phone}" class="undis" placeholder="b.d."></td>
+                                              <td> <input oninput="modifyobject('email', this.value, ${value.id})" value="${value.email}" class="undis" placeholder="b.d."></td>
+                                              <td> <a>Załaduj punkty</a></td>
+                                              <td> <input oninput="modifyobject('birthplace', this.value, ${value.id})" value="${value.birthplace}" class="undis" placeholder="b.d."></td>
+                                              <td> <input oninput="modifyobject('parent_phone', this.value, ${value.id})" value="${value.parent_phone}" class="undis" placeholder="b.d."></td>
+                                              <td> <input oninput="modifyobject('parent_mail', this.value, ${value.id})" value="${value.parent_mail}" class="undis" placeholder="b.d."></td>
+                                              <td><a onclick="modalNew('Object_create')">Edytuj</a></td>
+                                          </tr>`);
+                        id++;
+                    });
+                }
+            })
+    } else if (currentView == 'browsing') {
+        $('.center').append(`<div id="cl_points" style="width: 100%;"></div>`);
+
+        let xdata = {'id': classId};
+
+        $.ajax({
+            url: '/api/list_role_parents',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            data: xdata,
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                $.each(datax, function appendTable(key, value) {
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                    if (value.emoji == null) {
+                        value.emoji = ''
+                    }
+                    $('#cl_points').append(`<div class="cl_points" id="cl_points_p${value.id}"> 
+                                              <span class="cl_points_parent" style="background-color: ${value.color}; width: 88vw;"> 
+                                              <i onclick="hidePoints(this)" class="fa-solid fa-arrow-circle-down"></i> <i class="fa-solid ${value.emoji}"></i> ${value.name} </span>
+                                              <div id="clpc"></div></div>
+                                              `);
+                });
+            }, error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        });
+
+        $.ajax({
+            url: '/api/list_roles',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                $.each(datax, function appendTable(key, value) {
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                        $(`#cl_points_p${value.parent_id} > #clpc`).append(`
+                        <div class="cl_points_child"><span id="cl_points_c${value.id}" onclick="studListThat(${value.id}, undefined, '${value.name}')">${value.name}</span>
+                       </div>
+                        `);
+                });
+            }, error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        })
     }
 }
-
 
 function selectStud(id, fname, lname, desc, dep) {
     if ($('#cl_points_title').data('value') === null) {
         $('#cl_points_title').data('value', id);
         $('#cl_points').append('<h1 style="text-align: center;">Nie masz żadnych kategorii</h1>')
+        $.ajax({
+            url: '/api/list_roles',
+            dataType: 'text',
+            type: 'post',
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data, textStatus, jQxhr) {
+                let datax = JSON.parse(data);
+                $.each(datax, function appendTable(key, value) {
+                    // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
+                        $(`#cl_points_p${value.parent_id} > #clpc`).append(`
+                        <div class="cl_points_child"><span id="cl_points_c${value.id}" onclick="studListThat(${value.id})">${value.name}</span>
+                       </div>
+                        `);
+                });
+            }, error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+        })
     }
     $(".cl_points").each(function () {
             $(this).removeAttr('hidden');
@@ -1541,7 +1698,6 @@ function selectStud(id, fname, lname, desc, dep) {
         </div>`)
     showcurrentpoints(currentView);
 }
-
 
 function exportData(type) {
     if (type === 'logs') {
@@ -1819,21 +1975,16 @@ function removeDb(context, id) {
                     contentType: 'application/x-www-form-urlencoded',
                     success: function (data, textStatus, jQxhr) {
                         new swal('Usunięto!', 'Klasa została wymazana z istnienia', 'success')
+                        xReload('calc');
+                        return;
                     },
                     error: function (jqXhr, textStatus, errorThrown) {
                         modalError(jqXhr.responseText);
+                        return;
                     }
                 });
             });
         case 0:
-            console.log(0);
-            break;
-
-        case 1:
-            console.log(1);
-            break;
-        case 2:
-            console.log(2);
             break;
         default:
             $.ajax({
@@ -2063,6 +2214,7 @@ function showonly(type) {
 
 
 function showcurrentpoints(view = 'default') {
+    if (view == 'managing') return;
     $(".cl_points_child").each(function(index, element) {
         $(element).show();
 
@@ -2153,11 +2305,19 @@ function addpoint(id, value) {
     });
 }
 
-function modifyobject(type, value) {
+function modifyobject(type, value, id = -1) {
+    if (type == 'address') {
+        value = value.replace('\n', ';')
+        value = value.replace('/n', ';')
+        value = value.replace('+', ' ')
+    }
     if (value == '' || value == null) {
         value = ' ';
     }
-    let xdata = {'id': $('#cl_points_title').data('value'), 'key': type, 'value': value};
+    let xdata = {'id': id, 'key': type, 'value': value};
+    if (id == -1) {
+        xdata['id'] = $('#cl_points_title').data('value');
+    }
     $.ajax({
         url: `/api/update_object`,
         dataType: 'text',
@@ -2596,7 +2756,189 @@ function showPoints(x) {
     $(x).attr('onclick', 'hidePoints(this)');
 }
 
+function studListThat(id, rol='?', cln='?') {
+    let xdata = {'class_id': reloadId, 'role_id': id}
+    $.ajax({
+        url: '/api/list_with_category_in_class',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: xdata,
+        success: function (data, textStatus, jQxhr) {
+            let vdata = JSON.parse(data);
+            console.log(vdata)
+            createPopUp('<i class="fa-solid fa-list-1-2"></i> Lista uczniów', 'large', 'center', 'empty');
+            openPopUp();
+            $('#popdata').append(`
+            <p>Oto i jest lista uczniów z Klasy ${rol} posiadających rolę ${cln}. <a onclick="dlStudListThat(${id})">Możesz preferować też jej pobranie.</a></p>
+            <table id="studlist" class="table table-striped table-bordered table-hover table-sm">
+                <thead>
+                <tr>
+                    <th>Imię</th>
+                    <th>Nazwisko</th>
+                    <th>Ile razy?</th>
+                </tr>
+                </thead>
+                <tbody id="studlistbody">
+                </tbody>
+            </table>`);
+            for (const x of vdata) {
+                $('#studlistbody').append(`<tr><td>${x[1]}</td><td>${x[2]}</td><td>${x[3]}</td></tr>`)
+            }
+        }, error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
 
+    })
+}
+
+function calSearcher(x) {
+    //search in student list and categories
+    let input = $(x).val().toLowerCase();
+    let studentlist = $('#cl_studlist').children();
+    let categories = $('#clpc');
+    //search in student list
+    for (let i = 0; i < studentlist.length; i++) {
+        if (studentlist[i].innerText.toLowerCase().indexOf(input) > -1) {
+            studentlist[i].style.display = "";
+        } else {
+            studentlist[i].style.display = "none";
+        }
+    }
+    //search in categories
+    for (let i = 0; i < categories.length; i++) {
+        if (categories[i].innerText.toLowerCase().indexOf(input) > -1) {
+            categories[i].style.display = "";
+        } else {
+            categories[i].style.display = "none";
+        }
+    }
+}
+
+function adminSwitch(id) {
+    $.ajax({
+        url: '/api/admin_switch',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: {id: id},
+        success: function (data, textStatus, jQxhr) {
+            modalDone();
+            xReload('admin');
+        },
+        error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
+    })
+}
+
+function removePermission(id) {
+    $.ajax({
+        url: '/api/remove_permission',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        data: {id: id},
+        success: function (data, textStatus, jQxhr) {
+            modalDone();
+            xReload('admin');
+        },
+        error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
+    })
+}
+
+function addPerm(uid) {
+    $.ajax({
+        url: '/api/list_departments',
+        dataType: 'text',
+        type: 'get',
+        contentType: 'application/x-www-form-urlencoded',
+        success: function (data, textStatus, jQxhr) {
+            let vdata = JSON.parse(data);
+            new swal({
+                title: 'Dodaj uprawnienia',
+                html: '<label for="drop">Do jakiej klasy ma należeć?</label>' + '<select id="items" class="swal2-select" name="items"></select>',
+                preConfirm: function () {
+                    return new Promise(function (resolve) {
+                        resolve([$('#items').find('option:selected').attr('id')])
+                    })
+                },
+                didOpen: function () {
+                    $.each(vdata, function (val, text) {
+                        $('#items').append(`<option value="${text[0]}" id="${text[0]}">${text[1]}</option>`)
+                    });
+                }
+            }).then(function (result) {
+                $.ajax({
+                    url: '/api/add_permission',
+                    dataType: 'text',
+                    type: 'post',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: {user: uid, id: $('#items').val()},
+                    success: function (data, textStatus, jQxhr) {
+                        modalDone();
+                        xReload('admin');
+                    },
+                    error: function (jqXhr, textStatus, errorThrown) {
+                        modalError(jqXhr.responseText);
+                    }
+                })
+            })
+        }
+    })
+}
+
+function dlStudListThat(id) {
+    $.ajax({
+        url: '/calculations/whohas',
+        type: 'POST',
+        data: {class_id: reloadId, role_id: id},
+        dataType: 'arraybuffer',  // Specify arraybuffer for binary data
+        success: function (data) {
+            try {
+                // Create a Blob from the binary data
+                var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                // Create a download link
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+
+                // Set the download attribute with the desired file name
+                var fileName = 'my_file_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+                link.download = fileName;
+
+                // Append the link to the document
+                document.body.appendChild(link);
+
+                // Trigger a click on the link to start the download
+                link.click();
+
+                // Remove the link from the document
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Error handling binary data:', error);
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Error downloading file:', textStatus, errorThrown);
+        }
+    });
+}
+
+function noNull(arr) {
+  return arr.map(obj => {
+    for (const key in obj) {
+      if (obj[key] === null || obj[key] === ' ') {
+        obj[key] = '';
+      } else if (typeof obj[key] === 'object') {
+        obj[key] = noNull([obj[key]])[0];
+      }
+    }
+    return obj;
+  });
+}
 
 $(document).on('click', '#popclose', function () {
     $('.top').css('margin-top', '0vh');
@@ -2608,7 +2950,10 @@ $(document).on('click', '#popclose', function () {
 });
 
 $(document).on('click', '.cc', function (e) {
-    if (e.target !== this) return;
+    // if it is on .fa-thin, do nothing
+    if (e.target.className.includes('fa-thin')) {
+        return;
+    }
 
     showClassCalculator(e.target.id, $(this).data('name'));
 });
@@ -2631,7 +2976,9 @@ $(document).on('mousemove', '.cat_edit_sub', function (event) {
 //set timeout for render_theme
 
 $(document).ready(function () {
+    console.log('ready script')
+    render_theme();
     setTimeout(function () {
-        render_theme();
-    }, 100);
+        $('.xbody').removeClass('zbody')
+    }, 200);
 })

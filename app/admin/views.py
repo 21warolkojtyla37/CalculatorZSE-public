@@ -8,6 +8,17 @@ from .forms import DepartmentForm, EmployeeForm, NewObjectForm, ObjectForm, Role
 from ..models import Department, Employee, Role, RoleUser, PermissionUser, Object, Info
 
 from .. import util
+
+@admin.before_request
+def before_request():
+    if not util.canUseV1():
+        return '''
+        <h1>Ostrzeżenie</h1>
+        Wersja 1.0.0 jest wyłączona z poziomu Ustawień. 
+        Proszę użyć wersji 2.0.0 lub zmienić ustawienie.
+        <a href="/v2">Wróć na bezpieczny grunt</a>
+        ''', 403
+
         
 @admin.route('a', methods=['GET', 'POST'])
 @login_required

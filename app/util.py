@@ -11,7 +11,8 @@ def migrate():
     return result.stdout.decode('utf-8')
 
 def version():
-    return '2.2.0 (12 gru 2023)'
+    return '2.2.3 (17 gru 2023)'
+
 
 def check_version():
     setting = Setting.query.filter_by(name='is_dynamic').first()
@@ -60,6 +61,7 @@ def get_setting_value(name):
 def check_admin(*Type):
     if current_user.is_admin:
         print("superAdmin")
+        return True
     elif not current_user.is_admin:
         if len(Type) == 0:
             abort(403)
@@ -100,6 +102,15 @@ def getURL(*name):
         session['url'] = url_for(name[1] + "." + name[0])
     if len(name) == 3:
         session['url'] = url_for(name[2] + "." + name[0], id=name[1])
+
+
+def canUseV1():
+    setting = Setting.query.filter_by(name='is_dynamic').first()
+    if str(setting.value) in ['True', '1']:
+        return False
+    else:
+        return True
+
 
 
 def handleException(e):
