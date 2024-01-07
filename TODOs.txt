@@ -10,7 +10,7 @@ v2:
 [+]profil
 [+]wychowawcy -> klasy
 [+]logi kto co dodaje
-pokazywać kto dodał punkt
+[-]pokazywać kto dodał punkt
 [+]noty dla uczniów
 [+]zmiany tła
 [+]edycja naprawić wartość w kategoriach
@@ -19,7 +19,7 @@ v2.1:
 [+]zmiana nazwy klas
 [+]wartości dla not
 [+]dokumentacja
-export danych
+[+]export danych
 [+]zmiana haseł
 [+]usuwanie ucznia
 
@@ -42,6 +42,9 @@ nie-admin może dodać uprawnienie do swojej klasy
 auto wypełnienie emaili
 poprawki w imporcie
 generacje arkuszy
+edytuj ucznia w danych
+progi
+sumowanie punktów na backend
 
 
 

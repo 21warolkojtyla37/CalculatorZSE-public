@@ -1,18 +1,20 @@
-from flask import abort, render_template, Response, request
+from flask import abort, render_template, Response, request, send_file
 import xlsxwriter
 from . import magic
 from .. import db
-from ..models import Department, Employee, Role, RoleUser, PermissionUser, Object
+from ..models import Department, Employee, Role, RoleUser, PermissionUser, Object, Setting
 from flask_login import current_user, login_required
 import io
+import os
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-import matplotlib 
 import matplotlib.pyplot as plt
 import tabula
 from ..util import handleException, check_admin, LogEx
 from datetime import datetime
+import tempfile
+import shutil
+import csv
 
 @magic.route('a')
 @login_required
@@ -182,19 +184,22 @@ def plot(data1, title):
 @magic.route('f', methods=['GET', 'POST'])
 @login_required
 def data_import():
+    st = Setting.query.filter_by(name='user_import').first()
+    if st.value == '0':
+        return 'ERR', 403
     isthisFile = request.files.get('file')
     isthisFile.save('./' + isthisFile.filename)
     tables = tabula.read_pdf(isthisFile.filename, pages='all', multiple_tables=False)
     for i, table in enumerate(tables):
         LogEx("GOODIMP", current_user.id, f"Zaimportowano klasę z {isthisFile.filename} przez <{current_user.email}>")
         for index, row in table.iterrows():
-            i = row['Nazwisko, imię'].split() if row['Nazwisko, imię'] else ['', '']
-            j = row['Klasa'].split() if row['Klasa'] else ['', '']
-            k = str(row['PESEL']).zfill(11) if row['PESEL'] else None
-            l = datetime.strptime(row['Data Urodzenia'], '%Y-%m-%d').date() if row['Data Urodzenia'] else None
-            m = row['Adres'] if row['Adres'] else None
-            n = row['Telefon'] if row['Telefon'] else None
-            o = row['Urodzony w(e)'] if row['Urodzony w(e)'] else None
+            i = row.get('Nazwisko, imię', '').split()
+            j = row.get('Klasa', '').split()
+            k = str(row.get('PESEL', '')).zfill(11) if 'PESEL' in row else None
+            l = datetime.strptime(row.get('Data Urodzenia', ''), '%Y-%m-%d') if 'Data Urodzenia' in row else None
+            m = row.get('Adres', '')
+            n = row.get('Telefon', '')
+            o = row.get('Urodzony w(e)', '')
             x = Department.query.filter_by(name=j[0]).first()
             if not x:
                 y = Department(name=j[0], description=f'Klasa zaimportowana przez {current_user.first_name} {current_user.last_name}')
@@ -290,53 +295,138 @@ def data_import():
 '''
 generate pdf with objects which are in class and have some role
 '''
+
+
 @magic.route('/whohas', methods=['GET', 'POST'])
 @login_required
 def whohas():
     if request.form['class_id']:
-        l = request.form['class_id']
+        class_id = request.form['class_id']
     else:
         return 'ERR', 400
 
     check_admin('Point Group List', request.form['class_id'])
 
     if request.form['role_id']:
-        t = request.form['role_id']
+        role_id = request.form['role_id']
     else:
         return 'ERR', 400
 
-    LogEx("GOODWH", current_user.id, f"Wygenerowałem arkusz dla klasy {l} <{current_user.email}>")
+    LogEx("GOODWH", current_user.id, f"Wygenerowałem arkusz dla klasy {class_id} <{current_user.email}>")
 
-    data = RoleUser.query.filter_by(roleid=t).all()
-    objects = Object.query.filter_by(department_id=l).all()
+    data = RoleUser.query.filter_by(roleid=role_id).all()
+    objects = Object.query.filter_by(department_id=class_id).all()
     res_objects = []
-    for x in objects:
-        for y in data:
-            if x.id == y.userid:
-                res_objects.append([x.id, x.first_name, x.last_name, y.value])
 
-    response = Response()
-    response.status_code = 200
-    output = io.StringIO()
-    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-    worksheet = workbook.add_worksheet('Dane')
-    worksheet.write(0, 0, 'ID')
-    worksheet.write(0, 1, 'Imię')
-    worksheet.write(0, 2, 'Nazwisko')
-    worksheet.write(0, 3, 'Rola')
-    row = 1
-    col = 0
-    for x in res_objects:
-        worksheet.write(row, col, x[0])
-        worksheet.write(row, col + 1, x[1])
-        worksheet.write(row, col + 2, x[2])
-        worksheet.write(row, col + 3, x[3])
-        row += 1
-    workbook.close()
+    for obj in objects:
+        for role_user in data:
+            if obj.id == role_user.userid:
+                res_objects.append([obj.id, obj.first_name, obj.last_name, role_user.value])
+
+    output = io.BytesIO()
+
+    with xlsxwriter.Workbook(output, {'in_memory': True}) as workbook:
+        worksheet = workbook.add_worksheet('Dane')
+        worksheet.write(0, 0, 'ID')
+        worksheet.write(0, 1, 'Imię')
+        worksheet.write(0, 2, 'Nazwisko')
+        worksheet.write(0, 3, 'Rola')
+        row = 1
+        col = 0
+        for obj_data in res_objects:
+            worksheet.write(row, col, obj_data[0])
+            worksheet.write(row, col + 1, obj_data[1])
+            worksheet.write(row, col + 2, obj_data[2])
+            worksheet.write(row, col + 3, obj_data[3])
+            row += 1
+
     output.seek(0)
-    response = Response(
-        output.getvalue(),
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={'Content-Disposition': f'attachment; filename={l}_{t}.xlsx'}
-    )
-    return response
+
+    # Save the file to disk
+    filename = f'{class_id}_{role_id}.xlsx'
+    output_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'user_content', 'spreadsheets', filename)
+    with open(output_path, 'wb') as file:
+        file.write(output.getvalue())
+
+    # Send the file as a response
+    return send_file(output_path, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True, download_name=filename)
+
+
+@magic.route('/export_data', methods=['POST'])
+@login_required
+def export_data():
+    check_admin()
+    export_type = request.form.get('type')
+
+    if export_type == 'zip':
+        try:
+            temp_dir = tempfile.mkdtemp()
+            zip_path = os.path.join(temp_dir, 'data.zip')
+
+            with zipfile.ZipFile(zip_path, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
+                export_table_to_csv(zip_file, 'pracownicy.csv', Employee)
+                export_table_to_csv(zip_file, 'kategorie.csv', Role)
+                export_table_to_csv(zip_file, 'kategorie_nadrzedne.csv', RoleParent)
+                export_table_to_csv(zip_file, 'obiekty.csv', Object)
+                export_table_to_csv(zip_file, 'notatki.csv', Note)
+                export_table_to_csv(zip_file, 'uprawnienia.csv', PermissionUser)
+                export_table_to_csv(zip_file, 'punkty.csv', RoleUser)
+                export_table_to_csv(zip_file, 'logi.csv', Log)
+                export_table_to_csv(zip_file, 'raporty.csv', Info)
+                export_table_to_csv(zip_file, 'ustawienia.csv', Setting)
+                export_table_to_csv(zip_file, 'departamenty.csv', Department)
+                export_table_to_csv(zip_file, 'personalne_ustawienia.csv', PersonalSettingOverride)
+
+            return send_file(
+                zip_path,
+                mimetype='application/zip',
+                as_attachment=True,
+                download_name='data.zip',
+                conditional=True
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return "Error occurred while exporting data", 500
+        finally:
+            shutil.rmtree(temp_dir)  # Clean up temporary directory after use
+
+    elif export_type == 'sql':
+        db_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'instance', 'main.db')
+        return send_file(db_file_path, as_attachment=True, download_name='main.db')
+
+    else:
+        return "Invalid export type", 400
+
+def export_table_to_csv(zip_file, filename, model):
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_csv:
+        csv_writer = csv.writer(temp_csv)
+        header = [column.name for column in model.__table__.columns]
+        csv_writer.writerow(header)
+        for row in model.query.all():
+            csv_writer.writerow([getattr(row, column) for column in header])
+        temp_csv.seek(0)
+        zip_file.write(temp_csv.name, filename)
+
+
+@magic.route('/fill_mails', methods=['POST'])
+@login_required
+def fill_mails():
+    check_admin()
+    try:
+        s = Setting.query.filter_by(name='mail_template').first()
+        s = str(s.value)
+        d = request.form.get('d')
+        ob = Object.query.filter_by(department_id=d).all()
+        for o in ob:
+            polish_chars = 'ąćęłńóśźżĄĆĘŁŃÓŚŹŻ'
+            english_equivalents = 'acelnoszzACELNOSZZ'
+            translation_table = str.maketrans(polish_chars, english_equivalents)
+            x = o.first_name.lower().translate(translation_table)
+            y = o.last_name.lower().translate(translation_table)
+            o.email = s.format(first_name=x,last_name=y)
+            db.session.commit()
+        return 'OK', 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return "Error occurred while filling mails", 500

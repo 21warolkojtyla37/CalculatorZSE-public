@@ -113,18 +113,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+!*/default.png
 app/static/user_content
-
-!app/static/user_content/background_photo/default.png
-!app/static/user_content/footer_photo/default.png
-!app/static/user_content/profile_photo/default.png
-
-*.iml
-.idea/dataSources.xml
-.idea/discord.xml
-.idea/inspectionProfiles/profiles_settings.xml
-.idea/misc.xml
-.idea/jupyter-settings.xml
-.idea/vcs.xml
-.idea/modules.xml
-*.db

@@ -3,6 +3,7 @@ from flask_login import current_user
 from .models import Department, Employee, Role, RoleUser, PermissionUser, Object, Info, Log, Setting
 import subprocess, sys
 from . import db
+from PIL import Image
 
 def migrate():
     result = subprocess.run(['python', 'db', 'init'], stdout=subprocess.PIPE)
@@ -11,7 +12,7 @@ def migrate():
     return result.stdout.decode('utf-8')
 
 def version():
-    return '2.2.3 (17 gru 2023)'
+    return '2.3.2 (05 sty 2024)'
 
 
 def check_version():
@@ -22,9 +23,18 @@ def check_version():
         return False
 
 
-def import_settings(values):
+def import_settings():
+    Setting.query.delete()
+    db.session.commit()
     settings = ['is_dynamic', 'language', 'bg_photo', 'footer_photo', 'app_name', 'login_photo', 'author', 'version',
-                'allow_register', 'theme', 'color', 'is_def_bg', 'is_def_footer', 'is_def_login']
+                'allow_register', 'theme', 'color', 'is_def_bg', 'is_def_footer', 'is_def_login', 'default_threshold',
+                'thresholds_j', 'doodle', 'doodles', 'user_import', 'mail_template']
+    values = [True, 'pl_PL', '/user_content/background_photo/default.png',
+              '/user_content/footer_photo/default.png', 'Kalkulator ZSE',
+              '/user_content/background_photo/default.png', 'Mikołaj Patynowski 4I2', version(),
+              True, 0, 0, 1, 1, 1, 0, '[{"name": "wzorowe", "from": 1001, "to": 9999},{"name": "bardzo dobre", "from": 501, "to": 1000},{"name": "dobre", "from": 101, "to": 500},{"name": "poprawne", "from": -99, "to": 100},{"name": "nieodpowiednie", "from": -999, "to": -100},{"name": "naganne", "from": -9999, "to": -1000}]',
+              1, '[{"content": "🎆 Wszystkiego najlepszego z okazji Nowego Roku!", "from": "1900-12-27T22:36:00.000Z", "to": "1900-01-04T22:36:00.000Z"}, {"content": "🌠 Wszystkiego najlepszego z okazji Bożego Narodzenia!", "from": "1900-12-27T22:36:00.000Z", "to": "1900-01-04T22:36:00.000Z"}]',
+              1, '{first_name}{last_name}@elektronikonline.pl']
     for c, s in enumerate(settings):
         setting = Setting(name=s, value=values[c])
         db.session.add(setting)
@@ -117,3 +127,15 @@ def handleException(e):
     print('\033[2;31;43m')
     print(e)
     print('\033[0;0m')
+
+
+def crop_image(image):
+    width, height = image.size
+    if width == height:
+        return image
+    offset = int(abs(height - width) / 2)
+    if width > height:
+        image = image.crop([offset, 0, width - offset, height])
+    else:
+        image = image.crop([0, offset, width, height - offset])
+    return image

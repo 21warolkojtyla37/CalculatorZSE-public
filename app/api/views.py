@@ -13,10 +13,15 @@ import tempfile
 from io import StringIO, BytesIO
 import zipfile
 import json
+import datetime
+import sys
 
 from . import api
 from .. import util
 from ..models import *
+
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
 @api.route('show_count', methods=['GET', 'POST'])
 @login_required
@@ -253,13 +258,13 @@ def list_departments():
 
     if current_user.is_admin:
         for dp in departments:
-            dd = [dp.id, dp.name]
+            dd = [dp.id, dp.name, dp.description]
             did.append(dd)
     else:
         for dp in departments:
             for p in perm:
                 if dp.id == p.permissionid:
-                    dd = [dp.id, dp.name]
+                    dd = [dp.id, dp.name, dp.description]
                     did.append(dd)
 
     return jsonify(did)
@@ -484,6 +489,7 @@ def create_category_parent():
 @api.route('get_depart_objects', methods=['GET', 'POST'])
 @login_required
 def get_depart_objects():
+    p = Role.query.all()
     objects = []
 
     if current_user.is_admin:
@@ -491,8 +497,18 @@ def get_depart_objects():
             if request.form['id']:
                 x = request.form['id']
                 o = Object.query.filter_by(department_id=x).all()
+                for i in o:
+                    ru = RoleUser.query.filter_by(userid=i.id).all()
+                    points = 0
+                    for y in ru:
+                        for z in p:
+                            if y.roleid == z.id:
+                                points = points + y.value * z.value
+                    n = Note.query.filter_by(user_id=i.id).all()
+                    for y in n:
+                        points = points + y.value
+                    i.role_id = str(points)
                 objects.append(o)
-                print(o)
         except Exception as e:
             util.handleException(e)
             return 'ERR', 400
@@ -501,6 +517,17 @@ def get_depart_objects():
         if z:
             x = request.form['id']
             o = Object.query.filter_by(department_id=x).all()
+            for i in o:
+                ru = RoleUser.query.filter_by(userid=i.id).all()
+                points = 0
+                for y in ru:
+                    for z in p:
+                        if y.roleid == z.id:
+                            points = points + y.value * z.value
+                n = Note.query.filter_by(user_id=i.id).all()
+                for y in n:
+                    points = points + y.value
+                i.role_id = str(points)
             objects.append(o)
 
     return jsonify(objects)
@@ -568,7 +595,9 @@ def get_object_points_for_view2():
 
     try:
         if request.form['id']:
-            util.check_admin('Point Group List', request.form['id'])
+            o = Object.query.filter_by(id=request.form['id']).first().department_id
+            print(o)
+            util.check_admin('Point Group List', o)
             x = request.form['id']
             if not Role.query.count():
                 return 'Dodaj najpiew jakieś role', 420
@@ -805,14 +834,18 @@ def get_value():
         returned = []
         if request.form['type']:
             t = request.form['type'].split()
-        else:
-            return 'ERR', 400
-        for i in t:
-            name = Setting.query.filter_by(name=i).first()
-            returned.append(name.value)
+            for i in t:
+                name = Setting.query.filter_by(name=i).first()
+                returned.append(name.value)
     except Exception:
-        return 'ERR', 400
-
+        try:
+            returned = []
+            name = Setting.query.all()
+            for i in name:
+                returned.append(i.value)
+        except Exception as e:
+            util.handleException(e)
+            return 'ERR', 400
     return jsonify(returned)
 
 
@@ -918,9 +951,36 @@ def update_object():
         db.session.add(s)
         db.session.commit()
 
-    except Exception:
-        return 'ERR', 400
+    except Exception as e:
+        try:
+            db.session.rollback()
+            if request.form['key'] == 'birth':
+                if request.form['id']:
+                    t = request.form['id']
+                else:
+                    return 'ERR', 400
+                if request.form['key']:
+                    u = request.form['key']
+                else:
+                    return 'ERR', 400
+                if request.form['value']:
+                    v = request.form['value']
+                else:
+                    return 'ERR', 400
+                date_time_obj = datetime.datetime.strptime(request.form['value'], '%Y-%m-%d')
+                s = Object.query.filter_by(id=t).first()
+                util.check_admin('Point Group List', s.department_id)
+                util.LogEx('UOC', current_user.id, 'Zmieniono obiekt')
+                setattr(s, u, date_time_obj)
 
+                db.session.add(s)
+                db.session.commit()
+            else:
+                util.handleException(e)
+                return 'ERR', 400
+        except Exception as ex:
+            util.handleException(ex)
+            return 'ERR', 400
     return 'OK', 200
 
 
@@ -1245,53 +1305,6 @@ def list_with_category_in_class():
 
     return jsonify(res_objects)
 
-@api.route('/export_data', methods=['POST'])
-@login_required
-def export_data():
-    util.check_admin()
-    if request.form['type'] == 'zip':
-        try:
-            zip_buffer = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # Adjust the max_size as needed
-
-            with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
-                export_table_to_csv(zip_file, 'pracownicy.csv', Employee)
-                export_table_to_csv(zip_file, 'klasy.csv', Department)
-                export_table_to_csv(zip_file, 'uczniowie.csv', Object)
-                export_table_to_csv(zip_file, 'kategorie.csv', RoleParent)
-                export_table_to_csv(zip_file, 'podkategorie.csv', Role)
-                export_table_to_csv(zip_file, 'przypisania.csv', RoleUser)
-                export_table_to_csv(zip_file, 'przypisania_klas.csv', PermissionUser)
-                export_table_to_csv(zip_file, 'notatki.csv', Note)
-                export_table_to_csv(zip_file, 'raporty.csv', Info)
-                export_table_to_csv(zip_file, 'logi.csv', Log)
-                export_table_to_csv(zip_file, 'ustawienia.csv', Setting)
-                export_table_to_csv(zip_file, 'ustawienia_personalne.csv', PersonalSettingOverride)
-
-            zip_buffer.seek(0)
-            return send_file(
-                zip_buffer,
-                mimetype='application/zip',
-                as_attachment=True,
-                download_name='exported_data.zip'
-            )
-        except Exception as e:
-            print(f"Error: {e}")
-            return "Error occurred while exporting data", 500
-    elif request.form['type'] == 'sql':
-        return send_file('../instance/main.db', as_attachment=True)
-    else:
-        return "Invalid export type", 400
-
-def export_table_to_csv(zip_file, filename, model):
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp_csv:
-        csv_writer = csv.writer(temp_csv)
-        header = [column.name for column in model.__table__.columns]
-        csv_writer.writerow(header)
-        for row in model.query.all():
-            csv_writer.writerow([getattr(row, column) for column in header])
-        temp_csv.seek(0)
-        zip_file.write(temp_csv.name, filename)
-
 
 @api.route('add_permission', methods=['GET', 'POST'])
 @login_required
@@ -1362,3 +1375,14 @@ def admin_switch():
     except Exception:
         return 'ERR', 400
 
+@api.route('factory_reset', methods=['GET', 'POST'])
+@login_required
+def factory_reset():
+    util.check_admin()
+    try:
+        util.import_settings()
+        util.LogEx('FRC', current_user.id, 'Zresetowano ustawienia')
+
+        return 'OK', 200
+    except Exception:
+        return 'ERR', 400

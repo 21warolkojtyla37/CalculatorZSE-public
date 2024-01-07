@@ -67,10 +67,7 @@ def login():
 
             db.session.add(employee)
             db.session.commit()
-            util.import_settings([True, 'pl_PL', '/user_content/background_photo/default.png',
-                                 '/user_content/footer_photo/default.png', 'Kalkulator ZSE',
-                                 '/user_content/background_photo/default.png', 'Mikołaj Patynowski 4I2', util.version(),
-                                 True, 0, 0, 1, 1, 1])
+            util.import_settings()
             flash('Zostałeś zarejestrowany!')
             return redirect(url_for('auth.login'))
 
@@ -82,7 +79,7 @@ def login():
             if employee is not None and employee.verify_password(
                     form.password.data):
                 login_user(employee)
-                util.LogEx('LOGIN', form.email.data, ('GOODLOGIN ' + form.email.data + " " + request.remote_addr))
+                util.LogEx('LOGIN', form.email.data, ('Poprawne zalogowanie' + form.email.data + " " + request.remote_addr))
 
                 if employee.is_admin:
                     return redirect(url_for('home.dashboard'))
@@ -90,7 +87,7 @@ def login():
                     return redirect(url_for('home.dashboard'))
 
             else:
-                util.LogEx('LOGIN', form.email.data, ('BADLOGIN ' + request.remote_addr))
+                util.LogEx('LOGIN', form.email.data, ('Niepoprawne zalogowanie ' + request.remote_addr))
                 flash('Zły email/hasło')
 
         return render_template('auth/login.html', form=form, title='Login', canregister=canregister)

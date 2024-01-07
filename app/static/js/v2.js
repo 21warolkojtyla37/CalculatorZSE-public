@@ -6,9 +6,28 @@ let reloadName = '';
 let reloadIdChild = 0;
 let currentView = 'default'
 let is_admin;
+let vals;
 
 let categories = parseCategoriesX();
 let points = parsePointsX(categories);
+
+function valgen() {
+    $.ajax({
+        url: '/api/get_value',
+        dataType: 'text',
+        type: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        success: function (data, textStatus, jQxhr) {
+            xdata = JSON.parse(data);
+            vals = xdata;
+            console.log('ready script')
+            render_theme();
+            setTimeout(function () {
+                $('.xbody').removeClass('zbody')
+            }, 200);
+        },
+    })
+}
 
 console.log('init')
 
@@ -683,7 +702,12 @@ function createPopUp(title, size, position, content) {
                   contentType: false,
                   enctype: 'multipart/form-data',
                   processData: false,
-               });
+               }).success(function(data){
+                    $('#popdata').html(data);
+                    $('#popdata').toggle();
+                 }).error(function(){
+                    alert('Błąd podczas importowania danych.');
+                 });
                "/>
                </form></div>
         </div>
@@ -722,6 +746,7 @@ function createPopUp(title, size, position, content) {
              <ul class="choices">
               <li class="choice" onclick="change_setting_page('main')" id="mainsetting"><i class="fa-duotone fa-house"></i> Główne
               <li class="choice" onclick="change_setting_page('appearance')" id="appearances"><i class="fa-duotone fa-palette"></i> Wygląd
+              <li class="choice" onclick="change_setting_page('thresholds')" id="thresholds"><i class="fa-duotone fa-arrows"></i> Progi
               <li class="choice" onclick="change_setting_page('identification')" id="identifications"><i class="fa-duotone fa-passport"></i> Identyfikacja
               <li class="choice" onclick="change_setting_page('account')" id="accounts"><i class="fa-duotone fa-user"></i> Konto
             </ul> 
@@ -827,7 +852,10 @@ function createCalculator(title) {
     $('.body').append(site);
 
     if (is_admin === false) {
-        $('#calcDepart').append(`<div class="clickable" onclick="createPopUp('📲Import z Librusa', 'large', 'center', 'importLibrus');openPopUp();"><i class="fa fa-table-cells"></i><h3>Zaimportuj z Librusa</h3></div>`)
+        console.log(vals[18])
+        if (vals[18] == 1) {
+            $('#calcDepart').append(`<div class="clickable" onclick="createPopUp('📲Import z Librusa', 'large', 'center', 'importLibrus');openPopUp();"><i class="fa fa-table-cells"></i><h3>Zaimportuj z Librusa</h3></div>`)
+        }
     }
 
     let dataz = {'name': 'Department'}
@@ -842,11 +870,11 @@ function createCalculator(title) {
                 $('.grid').append(`<div class='clickable cc' data-name='${value[1]}' id='${value[0]}'>
                               <div class="classicons"><i onclick="removeDb('class', ${value[0]});" class="fa-thin fa-trash remove"></i>
                               <i onclick="editClass(${value[0]});" class="fa-thin fa-pen-to-square modify"></i>  </div>                 
-                              <i class="fa fa-users"></i><h3> ${value[1]} </h3></div>
+                              <i class="fa fa-users"></i><h3> ${value[1]} </h3><h5>${value[2]}</h5></div>
 
                               `)
             });
-            $('#howMuch').append('WYświetlam: ' + $('.cc').length + ' z: ' + $('.cc').length + "</div>");
+            $('#howMuch').append('Wyświetlam: ' + $('.cc').length + ' z: ' + $('.cc').length + "</div>");
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
@@ -1018,7 +1046,7 @@ function modalNew(type) {
     } else if (type === 'Role_create') {
         new swal({
             title: '➕ Dodajesz nową Podkategorię',
-            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa">' + '<input id="swal-input2" class="swal2-input" placeholder="Opis">' + '<label for="quantity">Wartość</label>' + '<input id="swal-input3" class="swal2-number" type="number" id="quantity" name="quantity" min="-1000000" max="100000"><br>' + '<div style="display: flex; align-items: center; justify-content: center;"><label for="boo">Czy można dodać tylko raz?</label> <input style="margin-left: 1vw;" id="swal-input4" class="swal2-check" type="checkbox" id="boo"></div><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label><br>' + '<select id="items" class="swal2-input" name="items"></select>',
+            html: '<input id="swal-input1" class="swal2-input" placeholder="Nazwa"><br>' + '<input id="swal-input2" class="swal2-input" placeholder="Opis"><br>' + '<input id="swal-input3" class="swal2-number swal2-input" type="number" id="quantity" placeholder="wartość" name="quantity" min="-1000000" max="100000"><br>' + '<div style="display: flex; align-items: center; justify-content: center;"><label for="boo">Czy można dodać tylko raz?</label> <input style="margin-left: 1vw;" id="swal-input4" class="swal2-check" type="checkbox" id="boo"></div><br>' + '<label for="drop">Do jakiej kategorii ma należeć?</label><br>' + '<select id="items" class="swal2-input" name="items"></select>',
             preConfirm: function () {
                 return new Promise(function (resolve) {
                     console.log($('#swal-input4').is(':checked'));
@@ -1387,6 +1415,7 @@ id="${text[0]}" onMouseOver="this.style.color=${text[2]}" onMouseOut="this.style
 }
 
 function showClassCalculator(classId, className) {
+    //[14,15] are the thresholds
     $('#calcmain').empty();
     let a;
     if (currentView == 'default') {
@@ -1535,17 +1564,17 @@ function showClassCalculator(classId, className) {
                       <thead>
                         <tr>
                           <th width="2%"> Nr </th>
-                          <th width="5%"> Imię/Nazwisko</th>
-                          <th width="9%"> PESEL</th>
+                          <th width="4%"> Imię/Nazwisko</th>
+                          <th width="8.5%"> PESEL</th>
                           <th width="8%"> Data ur. </th>
-                          <th width="20%"> Adres </th>
+                          <th width="15%"> Adres </th>
                           <th width="11%"> Nr. tel. </th>
                           <th width="10%"> E-mail </th>
-                          <th width="9%"> Punkty/Noty </th>
+                          <th width="9%"> Punkty </th>
                           <th width="9%"> Urodził się w </th>
-                          <th width="9%"> Nr. tel rodzica </th>
-                          <th width="9%"> E-mail rodzica </th>
-                          <th width="9%"> Akcja </th>
+                          <th width="10%"> Nr. tel rodzica </th>
+                          <th width="12%"> E-mail rodzica </th>
+                          <th width="11%"> Akcja </th>
                         </tr>
                       </thead>
                       <tbody id="append">
@@ -1557,7 +1586,7 @@ function showClassCalculator(classId, className) {
                             Dodaj nowego
                         </a>
                       </div>`);
-            let xdata = {'id': classId};
+            let xdata = {'id': classId, 'pointsum': true};
 
             $.ajax({
                 url: '/api/get_depart_objects',
@@ -1575,29 +1604,35 @@ function showClassCalculator(classId, className) {
                             value.comment = '';
                         }
                         if (value.address.includes(';')) {
+                            value.address1 = value.address.split(';')[0];
+                            value.address2 = value.address.split(';')[1];
                             value.address = value.address.replace(';', '&#13;&#10;');
+                        } else {
+                            value.address1 = value.address;
+                            value.address2 = '';
                         }
                         if (value.birth) {
-                            value.birth = new Date(value.birth);
-                            value.birth = ("0" + value.birth.getUTCDate()).slice(-2) + "/" +
-                            ("0" + (value.birth.getUTCMonth() + 1)).slice(-2) + "/" +
-                            value.birth.getUTCFullYear().toString().slice(-2);
+                            value.birth = new Date(value.birth).toISOString().split('T')[0];
                         }
-                        // DAC MOZLIWOSC ZMIANY KOLEJNOSCI
-                        $('#append').append(`<tr>
+                        console.log(value)
+                        let xxxx = checkValueCategory(parseInt(value.role_id) + parseInt(vals[14]), JSON.parse(vals[15]))
+                        $('#append').append(`<tr id="${value.id}">
                                               <td>${id}</td>
                                               <td> <input oninput="modifyobject('first_name', this.value, ${value.id})" value="${value.first_name}" class="undis" placeholder="brak imienia">
                                                    <input oninput="modifyobject('last_name', this.value, ${value.id})" value="${value.last_name}" class="undis" placeholder="brak nazwiska"></td>
                                               <td> <input oninput="modifyobject('PESEL', this.value, ${value.id})" value="${value.PESEL}" class="undis" placeholder="b.d."></td>
-                                              <td> <input oninput="modifyobject('birth', this.value, ${value.id})" value="${value.birth}" class="undis" placeholder="b.d."></td>
-                                              <td> <textarea oninput="modifyobject('address', this.value, ${value.id})" class="undis" placeholder="b.d.">${value.address}</textarea></td>
+                                              <td> <input oninput="modifyobject('birth', this.value, ${value.id})" value="${value.birth}" class="undis" type="date" placeholder="b.d." style="width: 102%;"></td>
+                                              <!--<td> <textarea oninput="modifyobject('address', this.value, ${value.id})" class="undis" placeholder="b.d.">${value.address}</textarea></td>-->
+                                              <td> <input class="adr1 undis" oninput="modifyobject('address1', this.value, ${value.id})" value="${value.address1}" class="undis" placeholder="b.d.">
+                                                    <input class="adr2 undis" oninput="modifyobject('address2', this.value, ${value.id})" value="${value.address2}" class="undis" placeholder="b.d."></td>
                                               <td> <input oninput="modifyobject('phone', this.value, ${value.id})" value="${value.phone}" class="undis" placeholder="b.d."></td>
                                               <td> <input oninput="modifyobject('email', this.value, ${value.id})" value="${value.email}" class="undis" placeholder="b.d."></td>
-                                              <td> <a>Załaduj punkty</a></td>
+                                              <td> ${parseInt(value.role_id) + parseInt(vals[14])} <hr> ${xxxx}</td>
                                               <td> <input oninput="modifyobject('birthplace', this.value, ${value.id})" value="${value.birthplace}" class="undis" placeholder="b.d."></td>
                                               <td> <input oninput="modifyobject('parent_phone', this.value, ${value.id})" value="${value.parent_phone}" class="undis" placeholder="b.d."></td>
                                               <td> <input oninput="modifyobject('parent_mail', this.value, ${value.id})" value="${value.parent_mail}" class="undis" placeholder="b.d."></td>
-                                              <td><a onclick="modalNew('Object_create')">Edytuj</a></td>
+                                              <td><p class="ds" onclick="removeStudent(${value.id})"><i class="fa-duotone fa-trash"></i> Usuń </p>
+                                                  <p class="ds" onclick="moveStudent(${value.id})"><i class="fa-duotone fa-arrows"></i> Przenieś </p></td>
                                           </tr>`);
                         id++;
                     });
@@ -1697,6 +1732,16 @@ function selectStud(id, fname, lname, desc, dep) {
            <p class="ds" onclick="moveStudent(${id})"><i class="fa-duotone fa-arrows"></i> Przenieś ucznia</p>
         </div>`)
     showcurrentpoints(currentView);
+}
+
+function checkValueCategory(value, categories) {
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        if (value >= category.from && value <= category.to) {
+            return category.name;
+        }
+    }
+    return "Poza zakresem!!!!!!!";
 }
 
 function exportData(type) {
@@ -2033,7 +2078,13 @@ function change_setting_page(page) {
                 $('.modright').html(`<h2>😶‍🌫️ Witaj w ustawieniach ${setupname}</h2><p>Zarządzaj swoją instancją aplikacji</p><hr>
                 <p id="main-s1"></p>
                 <button id="main-s2" onclick=""></button><br><hr>
-                <p id="main-s3"></p><button id="main-s4" onclick=""></button>`);
+                <p id="main-s3"></p><button id="main-s4" onclick=""></button><br><hr>
+                <p>Przywróć ustawienia aplikacji (nie usuwa niczego spoza Ustawień)</p>
+                <button id="main-s5" onclick="factoryreset()">Ustawienia fabryczne</button><br><hr>
+                <p>Czy zwykły użytkownik może dokonywać importów?</p>
+                <button id="main-s6" onclick="change_setting('user_import', 1, 'main')">tak</button>
+                <button id="main-s7" onclick="change_setting('user_import', 0, 'main')">nie</button>
+                `);
 
                 let vdata = JSON.parse(data);
                 console.log(vdata)
@@ -2095,6 +2146,9 @@ function change_setting_page(page) {
         $('#identifications').addClass('active');
         $('.modright').html(`<h2>📋 Jednak nie ${setupname}?</h2><p>Zmień nazwę i nie tylko...</p><hr>
         <p>Wybierz nazwę aplikacji</p><input type="text" id="name_changeable" value="${setupname}"><button onclick="updatename();">zapisz</button><br><hr>
+        <p>Czy wyświetlać okazjonalne teksty (np. nowy rok, święta, wakacje)</p>
+        <button onclick="change_setting('doodle', 1, 'identification')">tak</button>
+        <button onclick="change_setting('doodle', 0, 'identification')">nie</button><br><hr>
         <h4>Więcej opcji na razie nie dodaje</h4>`);
     } else if (page === 'account') {
         $('#accounts').addClass('active');
@@ -2115,6 +2169,41 @@ function change_setting_page(page) {
                             "<h6>Administrator może dokonać korekty twoich danych w Panelu.</h6>");
                     }
         });
+    } else if (page === 'thresholds') {
+        $('#thresholds').addClass('active');
+        $.ajax({
+            url: '/api/get_value',
+            dataType: 'text',
+            type: 'post',
+            data: {'type': 'default_threshold'},
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data, textStatus, jQxhr) {
+                let vdata = JSON.parse(data);
+                $('.modright').html(`<h2>📊 Jakie progi?</h2>
+                <p>Wartość początkowa</p>
+                <input type="number" id="threshold_start" value="${vdata}" oninput="change_setting('default_threshold', this.value, 'thresholds')"><br><hr>
+                <p>Ustaw progi punktowe</p>
+                <table id="thresholds_table" class="table table-striped table-bordered">
+                <thead><th>Od</th><th>Do</th><th>Opis</th><th>Akcje</th></thead>
+                </table>
+                <button onclick="modalNew('Threshold_create')">dodaj próg</button><br><hr>`);
+                $.ajax({
+                    url: '/api/get_value',
+                    dataType: 'text',
+                    type: 'post',
+                    data: {'type': 'thresholds_j'},
+                    contentType: 'application/x-www-form-urlencoded',
+                    success: function (data, textStatus, jQxhr) {
+                        let vdata = JSON.parse(data);
+                        vdata = JSON.parse(vdata);
+                        $.each(vdata, function appendTable(key, value) {
+                            $('#thresholds_table').append(`<tr><td>${value.from}</td><td>${value.to}</td><td>${value.name}</td><td><i class="fa-solid fa-trash"></i><span>Usuń</span></td></tr>`);
+                        });
+                    },
+
+                })
+            },
+        })
     }
 }
 
@@ -2130,56 +2219,48 @@ function change_setting(type, value, page) {
             if (page == 'appearance') {
                 render_theme();
             }
+            if (type == 'default_threshold') {
+                return;
+            }
             modalDone(data);
         },
         error: function (jqXhr, textStatus, errorThrown) {
             modalError(jqXhr.responseText);
         }
     });
-    change_setting_page(page);
+    if (type != 'default_threshold') {
+        change_setting_page(page);
+    }
 }
 
 function render_theme() {
-    let xdata = {'type': 'theme color is_def_bg is_def_footer is_def_login'};
-    $.ajax({
-        url: `/api/get_value`,
-        dataType: 'text',
-        type: 'post',
-        contentType: 'application/x-www-form-urlencoded',
-        data: xdata,
-        success: function (data, textStatus, jQxhr) {
-            let vdata = JSON.parse(data);
-            if (vdata[0] == 0) {
-                $("body").attr("style", "--bg-color: rgb(240, 240, 240); --bg-color-accent: rgb(220, 220, 220);--fg-color: rgb(0, 0, 0);");
-                if (vdata[2] == 1) {
-                    $('.intro-header').css("background-image", "url(../static/img/n2.jpg)");
-                }
-            } else if (vdata[0] == 1) {
-                $("body").attr("style", "--bg-color: rgb(0, 0, 0); --bg-color-accent: rgb(30, 30, 30);--fg-color: rgb(220, 220, 220);");
-                if (vdata[2] == 1) {
-                    $('.intro-header').css("background-image", "url(../static/img/n1.jpg)");
-                }
-            } else {
-                modalError('Błąd strony');
-            }
-            if (vdata[1] == 0) {
-                $("body").attr("style", function () {
-                    return $("body").attr("style") + "--main-color:rgb(29, 74, 163); --main-color-glass:rgba(29, 74, 163, 0.7)"
-                });
-            } else if (vdata[1] == 1) {
-                $("body").attr("style", function () {
-                    return $("body").attr("style") + "--main-color:rgb(140, 125, 88); --main-color-glass:rgba(140, 125, 88, 0.8)"
-                });
-            } else if (vdata[1] == 2) {
-                $("body").attr("style", function () {
-                    return $("body").attr("style") + "--main-color:rgb(130, 75, 150); --main-color-glass:rgba(130, 75, 150, 0.8)"
-                });
-            }
-        },
-        error: function (jqXhr, textStatus, errorThrown) {
-            modalError(jqXhr.responseText);
+    console.log(vals)
+    if (vals[9] == 0) {
+        $("body").attr("style", "--bg-color: rgb(240, 240, 240); --bg-color-accent: rgb(220, 220, 220);--fg-color: rgb(0, 0, 0);");
+        if (vals[11] == 1) {
+            $('.intro-header').css("background-image", "url(../static/img/n2.jpg)");
         }
-    });
+    } else if (vals[9] == 1) {
+        $("body").attr("style", "--bg-color: rgb(0, 0, 0); --bg-color-accent: rgb(30, 30, 30);--fg-color: rgb(220, 220, 220);");
+        if (vals[11] == 1) {
+            $('.intro-header').css("background-image", "url(../static/img/n1.jpg)");
+        }
+    } else {
+        modalError('Błąd strony');
+    }
+    if (vals[10] == 0) {
+        $("body").attr("style", function () {
+            return $("body").attr("style") + "--main-color:rgb(29, 74, 163); --main-color-glass:rgba(29, 74, 163, 0.7)"
+        });
+    } else if (vals[10] == 1) {
+        $("body").attr("style", function () {
+            return $("body").attr("style") + "--main-color:rgb(140, 125, 88); --main-color-glass:rgba(140, 125, 88, 0.8)"
+        });
+    } else if (vals[10] == 2) {
+        $("body").attr("style", function () {
+            return $("body").attr("style") + "--main-color:rgb(130, 75, 150); --main-color-glass:rgba(130, 75, 150, 0.8)"
+        });
+    }
 }
 
 function showonly(type) {
@@ -2252,7 +2333,7 @@ function showcurrentpoints(view = 'default') {
                     }
                 }
                 sum = sum + parseInt(vdata[i][2] * vdata[i][1]);
-                $('#ser_sum').text(sum.toString());
+                $('#ser_sum').text((sum + parseInt(vals[14])).toString());
             }
         },
         error: function (jqXhr, textStatus, errorThrown) {
@@ -2306,18 +2387,33 @@ function addpoint(id, value) {
 }
 
 function modifyobject(type, value, id = -1) {
-    if (type == 'address') {
-        value = value.replace('\n', ';')
-        value = value.replace('/n', ';')
-        value = value.replace('+', ' ')
-    }
     if (value == '' || value == null) {
         value = ' ';
     }
-    let xdata = {'id': id, 'key': type, 'value': value};
     if (id == -1) {
-        xdata['id'] = $('#cl_points_title').data('value');
+        id = $('#cl_points_title').data('value');
     }
+    if (type == 'birth') {
+        value = value.replace('-', '/')
+        value = value.split('/')
+        value = value[2] + '/' + value[1] + '/' + value[0]
+    }
+    if (type == 'address1' || type == 'address2') {
+        type = 'address'
+        console.log('dupa')
+        let r = $(`#${id}`)
+        let adr1Value = r.find('.adr1')[0].value;
+        let adr2Value = r.find('.adr2')[0].value;
+
+        if (adr2Value == '' || adr2Value == null) {
+            value = adr1Value;
+        } else {
+            value = adr1Value + ';' + adr2Value;
+        }
+        console.log(value)
+    }
+    let xdata = {'id': id, 'key': type, 'value': value};
+    console.log(xdata)
     $.ajax({
         url: `/api/update_object`,
         dataType: 'text',
@@ -2723,6 +2819,8 @@ function download_logs() {
             let blob = new Blob([data], { type: 'text/csv' });
             let zlink =window.URL.createObjectURL(blob);
             window.location = zlink
+        }, error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
         }
     });
 }
@@ -2730,14 +2828,23 @@ function download_logs() {
 
 function xexport(type) {
     $.ajax({
-        url: '/api/export_data',
+        url: '/calculations/export_data',
         type: 'post',
         data: {type: type},
-        success: function (data, textStatus, jQxhr) {
+        xhrFields: {
+            responseType: 'blob'  // Ensure the response is treated as a binary blob
+        },
+        success: function (data, textStatus, jqXhr) {
             modalDone();
-            let blob = new Blob([data], {type: `application/${type}`});
-            let zlink = window.URL.createObjectURL(blob);
-            window.location = zlink
+            var blob = new Blob([data], { type: jqXhr.getResponseHeader('content-type') });
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = `${(Math.random(1000000,9000000)).toString()}.bckp`;  // Set the desired filename
+            document.body.appendChild(link);
+            link.click();
+            //document.body.removeChild(link);
+        }, error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
         }
     })
 }
@@ -2895,34 +3002,20 @@ function dlStudListThat(id) {
         url: '/calculations/whohas',
         type: 'POST',
         data: {class_id: reloadId, role_id: id},
-        dataType: 'arraybuffer',  // Specify arraybuffer for binary data
-        success: function (data) {
-            try {
-                // Create a Blob from the binary data
-                var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-                // Create a download link
-                var link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-
-                // Set the download attribute with the desired file name
-                var fileName = 'my_file_' + new Date().toISOString().slice(0, 10) + '.xlsx';
-                link.download = fileName;
-
-                // Append the link to the document
-                document.body.appendChild(link);
-
-                // Trigger a click on the link to start the download
-                link.click();
-
-                // Remove the link from the document
-                document.body.removeChild(link);
-            } catch (error) {
-                console.error('Error handling binary data:', error);
-            }
+        xhrFields: {
+            responseType: 'blob'  // Ensure the response is treated as a binary blob
         },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error('Error downloading file:', textStatus, errorThrown);
+        success: function (data, status, xhr) {
+            var blob = new Blob([data], { type: xhr.getResponseHeader('content-type') });
+            var link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = `${(reloadId*id*Math.random(1000,2000)).toString()}.xlsx`;  // Set the desired filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+        error: function (error) {
+            console.error('Error:', error);
         }
     });
 }
@@ -2938,6 +3031,38 @@ function noNull(arr) {
     }
     return obj;
   });
+}
+
+function datePicker(x) {
+    $(x).datepicker("show");
+}
+
+function factoryreset() {
+    $.ajax({
+            url: '/api/factory_reset',
+            type: 'post',
+            success: function (data, textStatus, jQxhr) {
+                modalDone();
+                window.location.replace('/auth/logout');
+                },
+            error: function (jqXhr, textStatus, errorThrown) {
+                modalError(jqXhr.responseText);
+            }
+    });
+}
+
+function fillmails() {
+    $.ajax({
+        url: '/calculations/fill_mails',
+        type: 'post',
+        data: {d: reloadId},
+        success: function (data, textStatus, jQxhr) {
+            modalDone()
+            showClassCalculator(reloadId);
+        }, error: function (jqXhr, textStatus, errorThrown) {
+            modalError(jqXhr.responseText);
+        }
+    })
 }
 
 $(document).on('click', '#popclose', function () {
@@ -2973,12 +3098,5 @@ $(document).on('mousemove', '.cat_edit_sub', function (event) {
     x.css('left', event.clientX + 20);
 });
 
-//set timeout for render_theme
+//TODO: set timeout for render_theme
 
-$(document).ready(function () {
-    console.log('ready script')
-    render_theme();
-    setTimeout(function () {
-        $('.xbody').removeClass('zbody')
-    }, 200);
-})
